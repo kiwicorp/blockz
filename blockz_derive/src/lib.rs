@@ -16,6 +16,23 @@ use proc_macro::TokenStream;
 use syn::parse_macro_input;
 use syn::DeriveInput;
 
+/// Derive the Singleton trait.
+///
+/// This requires that the struct or enum is [Send].
+///
+/// Required available imports:
+/// - [anyhow]
+/// - [async_trait]
+/// - [blockz]
+/// - [once_cell]
+/// - [tokio]
+///
+/// [Send]: https://doc.rust-lang.org/stable/std/marker/trait.Send.html
+/// [anyhow]: https://docs.rs/anyhow
+/// [async_trait]: https://docs.rs/async_trait
+/// [blockz]: https://github.com/selftechio/blockz
+/// [once_cell]: https://docs.rs/once_cell
+/// [tokio]: https://docs.rs/tokio
 #[proc_macro_derive(Singleton)]
 pub fn derive_singleton(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
