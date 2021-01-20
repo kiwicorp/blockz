@@ -9,5 +9,3 @@ pub use blockz_derive::*;
 pub mod singleton;
 
 pub use singleton::Singleton;
-pub use singleton::SingletonFn;
-pub use singleton::SingletonFnMut;

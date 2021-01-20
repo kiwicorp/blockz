@@ -33,7 +33,7 @@ pub fn impl_singleton_trait(type_name: &Ident, singleton_name: &Ident) -> proc_m
             /// Run an async function using an immutable #type_name.
             async fn use_singleton<F, R>(clojure: F) -> anyhow::Result<R>
             where
-                F: for<'c> blockz::SingletonFn<'c, #type_name, R> + Send,
+                F: for<'c> blockz::singleton::SingletonFn<'c, #type_name, R> + Send,
                 R: Send,
             {
                 let inner = #singleton_name.get().unwrap().lock().await;
@@ -44,12 +44,36 @@ pub fn impl_singleton_trait(type_name: &Ident, singleton_name: &Ident) -> proc_m
             /// Run an async function using a mutable #type_name.
             async fn use_mut_singleton<F, R>(clojure: F) -> anyhow::Result<R>
             where
-                F: for<'c> blockz::SingletonFnMut<'c, Self::Inner, R> + Send,
+                F: for<'c> blockz::singleton::SingletonFnMut<'c, Self::Inner, R> + Send,
                 R: Send,
             {
                 let mut inner = #singleton_name.get().unwrap().lock().await;
                 let inner_deref: &mut #type_name = &mut *inner;
                 clojure.call_once(inner_deref).await
+            }
+
+            /// Use the singleton with an immutable reference and an argument.
+            async fn use_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> anyhow::Result<R>
+            where
+                F: for<'c> blockz::singleton::SingletonFnWithArg<'c, Self::Inner, A, R> + Send,
+                A: Send,
+                R: Send
+            {
+                let inner = #singleton_name.get().unwrap().lock().await;
+                let inner_deref: &#type_name = &*inner;
+                clojure.call_once(inner_deref, arg).await
+            }
+
+            /// Use the singleton with an immutable reference and an argument.
+            async fn use_mut_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> anyhow::Result<R>
+            where
+                F: for<'c> blockz::singleton::SingletonFnMutWithArg<'c, Self::Inner, A, R> + Send,
+                A: Send,
+                R: Send
+            {
+                let mut inner = #singleton_name.get().unwrap().lock().await;
+                let inner_deref: &mut #type_name = &mut *inner;
+                clojure.call_once(inner_deref, arg).await
             }
         }
     }
