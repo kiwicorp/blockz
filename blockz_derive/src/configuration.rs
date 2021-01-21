@@ -7,7 +7,7 @@ use proc_macro2::TokenStream;
 pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
     quote! {
         #[async_trait::async_trait]
-        impl blockz::Configuration for #type_name {
+        impl blockz::configuration::Configuration for #type_name {
             type Inner = #type_name;
 
             /// Load the #type_name configuration.
@@ -30,7 +30,7 @@ pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
 pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
     quote! {
         #[async_trait::async_trait]
-        impl ::blockz::Configuration for #type_name {
+        impl ::blockz::configuration::Configuration for #type_name {
             type Inner = #type_name;
 
             /// Load the #type_name configuration.

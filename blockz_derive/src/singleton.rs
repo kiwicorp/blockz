@@ -33,7 +33,7 @@ pub fn impl_singleton_static(
 pub fn impl_singleton_trait(type_name: &Ident, singleton_name: &Ident) -> proc_macro2::TokenStream {
     quote! {
         #[async_trait::async_trait]
-        impl blockz::Singleton for #type_name {
+        impl blockz::singleton::Singleton for #type_name {
             type Inner = #type_name;
 
             /// Initialize the singleton for #type_name.
@@ -99,7 +99,7 @@ pub fn impl_singleton_trait(type_name: &Ident, singleton_name: &Ident) -> proc_m
 pub fn impl_singleton_trait(type_name: &Ident, singleton_name: &Ident) -> proc_macro2::TokenStream {
     quote! {
         #[async_trait::async_trait]
-        impl ::blockz::Singleton for #type_name {
+        impl ::blockz::singleton::Singleton for #type_name {
             type Inner = #type_name;
 
             /// Initialize the singleton for #type_name.
