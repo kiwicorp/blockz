@@ -3,6 +3,7 @@
 use proc_macro2::Ident;
 
 /// Implement the singleton static.
+#[cfg(feature = "no_absolute_paths")]
 pub fn impl_singleton_static(
     type_name: &Ident,
     singleton_name: &Ident,
@@ -14,7 +15,21 @@ pub fn impl_singleton_static(
     }
 }
 
+/// Implement the singleton static.
+#[cfg(not(feature = "no_absolute_paths"))]
+pub fn impl_singleton_static(
+    type_name: &Ident,
+    singleton_name: &Ident,
+) -> proc_macro2::TokenStream {
+    quote! {
+        /// Singleton for #type_name.
+        static #singleton_name: ::once_cell::sync::OnceCell<::tokio::sync::Mutex<#type_name>> =
+            ::once_cell::sync::OnceCell::new();
+    }
+}
+
 /// Implement the singleton trait.
+#[cfg(feature = "no_absolute_paths")]
 pub fn impl_singleton_trait(type_name: &Ident, singleton_name: &Ident) -> proc_macro2::TokenStream {
     quote! {
         #[async_trait::async_trait]
@@ -68,6 +83,72 @@ pub fn impl_singleton_trait(type_name: &Ident, singleton_name: &Ident) -> proc_m
             async fn use_mut_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> anyhow::Result<R>
             where
                 F: for<'c> blockz::singleton::SingletonFnMutWithArg<'c, Self::Inner, A, R> + Send,
+                A: Send,
+                R: Send
+            {
+                let mut inner = #singleton_name.get().unwrap().lock().await;
+                let inner_deref: &mut #type_name = &mut *inner;
+                clojure.call_once(inner_deref, arg).await
+            }
+        }
+    }
+}
+
+/// Implement the singleton trait.
+#[cfg(not(feature = "no_absolute_paths"))]
+pub fn impl_singleton_trait(type_name: &Ident, singleton_name: &Ident) -> proc_macro2::TokenStream {
+    quote! {
+        #[async_trait::async_trait]
+        impl ::blockz::Singleton for #type_name {
+            type Inner = #type_name;
+
+            /// Initialize the singleton for #type_name.
+            fn init_singleton(inner: Self::Inner) -> ::anyhow::Result<()> {
+                if #singleton_name.set(::tokio::sync::Mutex::new(inner)).is_err() {
+                    Err(::anyhow::anyhow!("#type_name: singleton: already initialized"))
+                } else {
+                    Ok(())
+                }
+            }
+
+            /// Run an async function using an immutable #type_name.
+            async fn use_singleton<F, R>(clojure: F) -> ::anyhow::Result<R>
+            where
+                F: for<'c> ::blockz::singleton::SingletonFn<'c, #type_name, R> + Send,
+                R: Send,
+            {
+                let inner = #singleton_name.get().unwrap().lock().await;
+                let inner_deref: &#type_name = &*inner;
+                clojure.call_once(inner_deref).await
+            }
+
+            /// Run an async function using a mutable #type_name.
+            async fn use_mut_singleton<F, R>(clojure: F) -> ::anyhow::Result<R>
+            where
+                F: for<'c> ::blockz::singleton::SingletonFnMut<'c, Self::Inner, R> + Send,
+                R: Send,
+            {
+                let mut inner = #singleton_name.get().unwrap().lock().await;
+                let inner_deref: &mut #type_name = &mut *inner;
+                clojure.call_once(inner_deref).await
+            }
+
+            /// Use the singleton with an immutable reference and an argument.
+            async fn use_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> ::anyhow::Result<R>
+            where
+                F: for<'c> ::blockz::singleton::SingletonFnWithArg<'c, Self::Inner, A, R> + Send,
+                A: Send,
+                R: Send
+            {
+                let inner = #singleton_name.get().unwrap().lock().await;
+                let inner_deref: &#type_name = &*inner;
+                clojure.call_once(inner_deref, arg).await
+            }
+
+            /// Use the singleton with an immutable reference and an argument.
+            async fn use_mut_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> ::anyhow::Result<R>
+            where
+                F: for<'c> ::blockz::singleton::SingletonFnMutWithArg<'c, Self::Inner, A, R> + Send,
                 A: Send,
                 R: Send
             {
