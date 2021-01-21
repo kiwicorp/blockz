@@ -5,6 +5,7 @@ use proc_macro2::TokenStream;
 
 #[cfg(feature = "no_absolute_paths")]
 pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
+    let type_name_str = type_name.to_string();
     quote! {
         #[async_trait::async_trait]
         impl blockz::configuration::Configuration for #type_name {
@@ -19,7 +20,7 @@ pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
                 };
                 match config_raw.try_into() {
                     Ok(value) => Ok(value),
-                    Err(e) => anyhow::bail!("#type_name: load: {}", e),
+                    Err(e) => anyhow::bail!("{}: load: {}", #type_name_str, e),
                 }
             }
         }
@@ -28,6 +29,7 @@ pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
 
 #[cfg(not(feature = "no_absolute_paths"))]
 pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
+    let type_name_str = type_name.to_string();
     quote! {
         #[async_trait::async_trait]
         impl ::blockz::configuration::Configuration for #type_name {
@@ -42,7 +44,7 @@ pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
                 };
                 match config_raw.try_into() {
                     Ok(value) => Ok(value),
-                    Err(e) => anyhow::bail!("#type_name: load: {}", e),
+                    Err(e) => anyhow::bail!("{}: load: {}", #type_name_str, e),
                 }
             }
         }
