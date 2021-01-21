@@ -3,6 +3,7 @@
 #[macro_use]
 extern crate quote;
 
+mod configuration;
 mod singleton;
 
 use convert_case::Case;
@@ -52,6 +53,34 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
         #impl_singleton
     };
 
+    TokenStream::from(expanded)
+}
+
+/// Derive the Configuration trait.
+///
+/// All fields shall be loaded from environment variables, at the moment.
+///
+/// This requires that the struct or enum is [Deserialize].
+///
+/// Required available imports:
+/// - [anyhow]
+/// - [async_trait]
+/// - [blockz]
+/// - [config]
+///
+/// [Deserialize]: https://docs.rs/serde/1.0.120/serde/trait.Deserialize.html
+/// [anyhow]: https://docs.rs/anyhow
+/// [async_trait]: https://docs.rs/async_trait
+/// [blockz]: https://github.com/selftechio/blockz
+/// [config]: https://docs.rs/config
+#[proc_macro_derive(Configuration)]
+pub fn derive_configuration(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let type_name = &input.ident;
+    let impl_configuration = configuration::impl_configuration_trait(type_name);
+    let expanded = quote! {
+        #impl_configuration
+    };
     TokenStream::from(expanded)
 }
 
