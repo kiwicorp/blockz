@@ -8,5 +8,8 @@ pub use blockz_derive::*;
 pub mod configuration;
 pub mod singleton;
 
-pub use configuration::Configuration;
-pub use singleton::Singleton;
+/// Prelude for blockz.
+pub mod prelude {
+    pub use crate::configuration::Configuration;
+    pub use crate::singleton::Singleton;
+}
