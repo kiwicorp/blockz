@@ -6,7 +6,7 @@ extern crate blockz_derive;
 use serde::Deserialize;
 
 #[derive(Configuration, Deserialize)]
-#[env_prefix("PREFIX")]
+#[config("PREFIX")]
 struct SingletonExampleConfig;
 
 #[derive(Singleton)]

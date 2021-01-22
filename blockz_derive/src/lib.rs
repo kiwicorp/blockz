@@ -74,7 +74,7 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
 /// [async_trait]: https://docs.rs/async_trait
 /// [blockz]: https://github.com/selftechio/blockz
 /// [config]: https://docs.rs/config
-#[proc_macro_derive(Configuration, attributes(env_prefix))]
+#[proc_macro_derive(Configuration, attributes(config))]
 pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -84,7 +84,7 @@ pub fn derive_configuration(input: TokenStream) -> TokenStream {
     } else {
         let mut arg: Option<LitStr> = None;
         for attr in input.attrs {
-            if attr.path.is_ident("env_prefix") {
+            if attr.path.is_ident("config") {
                 arg = Some(attr.parse_args().unwrap());
                 break;
             }
