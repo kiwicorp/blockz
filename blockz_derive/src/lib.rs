@@ -16,6 +16,7 @@ use proc_macro::TokenStream;
 
 use syn::parse_macro_input;
 use syn::DeriveInput;
+use syn::LitStr;
 
 /// Derive the Singleton trait.
 ///
@@ -73,11 +74,25 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
 /// [async_trait]: https://docs.rs/async_trait
 /// [blockz]: https://github.com/selftechio/blockz
 /// [config]: https://docs.rs/config
-#[proc_macro_derive(Configuration)]
+#[proc_macro_derive(Configuration, attributes(env_prefix))]
 pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
+
     let type_name = &input.ident;
-    let impl_configuration = configuration::impl_configuration_trait(type_name);
+    let prefix: Option<LitStr> = if input.attrs.is_empty() {
+        None
+    } else {
+        let mut arg: Option<LitStr> = None;
+        for attr in input.attrs {
+            if attr.path.is_ident("env_prefix") {
+                arg = Some(attr.parse_args().unwrap());
+                break;
+            }
+        }
+        arg
+    };
+
+    let impl_configuration = configuration::impl_configuration_trait(type_name, prefix);
     let expanded = quote! {
         #impl_configuration
     };

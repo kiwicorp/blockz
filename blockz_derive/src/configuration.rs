@@ -3,9 +3,20 @@
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 
+use syn::LitStr;
+
 #[cfg(feature = "no_absolute_paths")]
-pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
+pub fn impl_configuration_trait(type_name: &Ident, prefix: Option<LitStr>) -> TokenStream {
     let type_name_str = type_name.to_string();
+    let environment_source = if let Some(value) = prefix {
+        quote! {
+            config::Environment::with_prefix(#value)
+        }
+    } else {
+        quote! {
+            config::Environment::new()
+        }
+    };
     quote! {
         #[async_trait::async_trait]
         impl blockz::configuration::Configuration for #type_name {
@@ -15,7 +26,7 @@ pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
             async fn load() -> anyhow::Result<Self::Inner> {
                 let config_raw = {
                     let mut config_raw = config::Config::default();
-                    config_raw.merge(config::Environment::new())?;
+                    config_raw.merge(#environment_source)?;
                     config_raw
                 };
                 match config_raw.try_into() {
@@ -28,8 +39,17 @@ pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
 }
 
 #[cfg(not(feature = "no_absolute_paths"))]
-pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
+pub fn impl_configuration_trait(type_name: &Ident, prefix: Option<LitStr>) -> TokenStream {
     let type_name_str = type_name.to_string();
+    let environment_source = if let Some(value) = prefix {
+        quote! {
+            config::Environment::with_prefix(#value)
+        }
+    } else {
+        quote! {
+            config::Environment::new()
+        }
+    };
     quote! {
         #[async_trait::async_trait]
         impl ::blockz::configuration::Configuration for #type_name {
@@ -39,7 +59,7 @@ pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
             async fn load() -> ::anyhow::Result<Self::Inner> {
                 let config_raw = {
                     let mut config_raw = config::Config::default();
-                    config_raw.merge(config::Environment::new())?;
+                    config_raw.merge(#environment_source)?;
                     config_raw
                 };
                 match config_raw.try_into() {
