@@ -79,20 +79,9 @@ pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let type_name = &input.ident;
-    let prefix: Option<LitStr> = if input.attrs.is_empty() {
-        None
-    } else {
-        let mut arg: Option<LitStr> = None;
-        for attr in input.attrs {
-            if attr.path.is_ident("config") {
-                arg = Some(attr.parse_args().unwrap());
-                break;
-            }
-        }
-        arg
-    };
 
-    let impl_configuration = configuration::impl_configuration_trait(type_name, prefix);
+    let impl_configuration = configuration::impl_configuration_trait(type_name);
+
     let expanded = quote! {
         #impl_configuration
     };

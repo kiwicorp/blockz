@@ -20,6 +20,7 @@ anyhow      = "1.0.38"
 async-trait = "0.1.42"
 blockz      = { path = "../" }
 config      = { version = "0.10.1", default_features = false }
+envy        = "0.4.2"
 once_cell   = "1.5.2"
 serde       = { version = "1.0.121", features = ["derive"] }
 tokio       = "1.0.2"
