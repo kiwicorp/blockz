@@ -7,15 +7,15 @@ use proc_macro2::TokenStream;
 pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
     quote! {
         #[async_trait::async_trait]
-        impl ::blockz::configuration::Configuration for #type_name {
+        impl blockz::configuration::Configuration for #type_name {
             type Inner = #type_name;
             type Opts = Option<String>;
 
-            async fn load(opts: Self::Opts) -> ::anyhow::Result<Self::Inner> {
+            async fn load(opts: Self::Opts) -> anyhow::Result<Self::Inner> {
                 if let Some(prefix) = opts {
-                    Ok(::envy::prefixed(prefix).from_env::<Self::Inner>()?)
+                    Ok(envy::prefixed(prefix).from_env::<Self::Inner>()?)
                 } else {
-                    Ok(::envy::from_env::<Self::Inner>()?)
+                    Ok(envy::from_env::<Self::Inner>()?)
                 }
             }
         }
@@ -26,15 +26,15 @@ pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
 pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
     quote! {
         #[async_trait::async_trait]
-        impl blockz::configuration::Configuration for #type_name {
+        impl ::blockz::configuration::Configuration for #type_name {
             type Inner = #type_name;
             type Opts = Option<String>;
 
-            async fn load(opts: Self::Opts) -> anyhow::Result<Self::Inner> {
+            async fn load(opts: Self::Opts) -> ::anyhow::Result<Self::Inner> {
                 if let Some(prefix) = opts {
-                    Ok(envy::prefixed(prefix).from_env::<Self::Inner>()?)
+                    Ok(::envy::prefixed(prefix).from_env::<Self::Inner>()?)
                 } else {
-                    Ok(envy::from_env::<Self::Inner>()?)
+                    Ok(::envy::from_env::<Self::Inner>()?)
                 }
             }
         }
