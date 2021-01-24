@@ -3,8 +3,6 @@
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 
-use syn::LitStr;
-
 #[cfg(feature = "no_absolute_paths")]
 pub fn impl_configuration_trait(type_name: &Ident, prefix: Option<LitStr>) -> TokenStream {
     quote! {

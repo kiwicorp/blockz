@@ -16,7 +16,6 @@ use proc_macro::TokenStream;
 
 use syn::parse_macro_input;
 use syn::DeriveInput;
-use syn::LitStr;
 
 /// Derive the Singleton trait.
 ///
