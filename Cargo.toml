@@ -39,5 +39,5 @@ default = ["env", "json"]
 env  = ["envy"]
 json = ["serde_json"]
 
-# Pass this features to blockz_derive.
+# Pass this feature to blockz_derive.
 no_absolute_paths = ["blockz_derive/no_absolute_paths"]
