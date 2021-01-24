@@ -16,10 +16,6 @@ pub trait Configuration {
 
 #[cfg(feature = "env")]
 mod env;
-#[cfg(feature = "envy")]
-pub use env::EnvConfiguration;
 
 #[cfg(feature = "json")]
 mod json;
-#[cfg(feature = "json")]
-pub use json::JsonConfiguration;

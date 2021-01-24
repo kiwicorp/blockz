@@ -1,13 +1,14 @@
 //! Json configuration.
 
-use crate::configuration::Configuration;
-
 use std::path::Path;
 
 use serde::Deserialize;
 
+/// Options accepted by json configuration.
+pub type Opts<'o> = JsonConfigurationOpts<'o>;
+
 /// Load configuration using a JSON file.
-pub struct JsonConfiguration<'c, I>
+pub struct Configuration<'c, I>
 where
     I: Send + for<'de> Deserialize<'de>,
 {
@@ -15,6 +16,7 @@ where
     _opts: JsonConfigurationOpts<'c>,
 }
 
+/// Json configuration options.
 pub enum JsonConfigurationOpts<'o> {
     File(&'o Path),
     // make is possible to load a json configuration from a url, using reqwest.
@@ -22,15 +24,13 @@ pub enum JsonConfigurationOpts<'o> {
 }
 
 #[async_trait::async_trait]
-impl<'c, I> Configuration for JsonConfiguration<'c, I>
+impl<'c, I> crate::configuration::Configuration for Configuration<'c, I>
 where
     I: Send + for<'de> Deserialize<'de>,
 {
-
-
     type Inner = I;
 
-    type Opts = JsonConfigurationOpts<'c>;
+    type Opts = Opts<'c>;
 
     async fn load(opts: Self::Opts) -> anyhow::Result<Self::Inner> {
         // boilerplate

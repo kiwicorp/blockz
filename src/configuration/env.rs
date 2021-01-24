@@ -1,11 +1,12 @@
 //! Env configuration.
 
-use crate::configuration::Configuration;
-
 use serde::Deserialize;
 
+/// Options accepted by env configuration.
+pub type Opts<'s> = Option<&'s str>;
+
 /// Load configuration using envy.
-pub struct EnvConfiguration<'c, I>
+pub struct Configuration<'c, I>
 where
     I: Send + for<'de> Deserialize<'de>,
 {
@@ -14,12 +15,12 @@ where
 }
 
 #[async_trait::async_trait]
-impl<'c, I> Configuration for EnvConfiguration<'c, I>
+impl<'c, I> crate::configuration::Configuration for Configuration<'c, I>
 where
     I: Send + for<'de> Deserialize<'de>,
 {
     type Inner = I;
-    type Opts = Option<&'c str>;
+    type Opts = Opts<'c>;
 
     async fn load(opts: Self::Opts) -> anyhow::Result<Self::Inner> {
         if let Some(prefix) = opts {
