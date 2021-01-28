@@ -4,6 +4,7 @@
 extern crate quote;
 
 mod configuration;
+mod paths;
 mod singleton;
 
 use convert_case::Case;

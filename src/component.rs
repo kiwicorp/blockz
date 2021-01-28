@@ -4,7 +4,7 @@
 #[async_trait::async_trait]
 pub trait ComponentExt<'c, 'p>
 where
-    'p: 'c
+    'p: 'c,
 {
     /// The inner type of the component that should be returned upon initialization.
     type Inner: Send + 'c;

@@ -26,7 +26,11 @@ default_features = false
 features = ["full"]
 
 [features]
-default = []
+default = ["singleton_generics"]
 
 # Pass this feature to blockz_derive.
 no_absolute_paths = ["blockz_derive/no_absolute_paths"]
+
+# singleton features
+singleton_generics = ["blockz_derive/singleton_generics"]
+singleton_boxes    = ["blockz_derive/singleton_boxes"]
