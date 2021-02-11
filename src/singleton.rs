@@ -16,116 +16,36 @@ pub trait Singleton {
     /// Use the singleton with an immutable reference.
     // F: Function to be run.
     // R: Function result (to be wrapped by anyhow::Result).
-    #[cfg(feature = "singleton_generics")]
     async fn use_singleton<F, R>(clojure: F) -> anyhow::Result<R>
     where
         F: for<'c> SingletonFn<'c, Self::Inner, R> + Send,
-        R: Send;
-
-    /// Use the singleton with an immutable reference.
-    // F: Function to be run.
-    // R: Function result (to be wrapped by anyhow::Result).
-    #[cfg(feature = "singleton_boxes")]
-    async fn use_singleton<R>(
-        clojure: Box<
-            dyn for<'c> SingletonFn<
-                    SingletonResult = Box<dyn Future<Output = anyhow::Result<R>>>,
-                    'c,
-                    Self::Inner,
-                    R,
-                > + Send,
-        >,
-    ) -> anyhow::Result<R>
-    where
         R: Send;
 
     /// Use the singleton with an immutable reference and an argument.
     // F: Function to be run.
     // A: Function argument.
     // R: Function result (to be wrapped by anyhow::Result).
-    #[cfg(feature = "singleton_generics")]
     async fn use_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> anyhow::Result<R>
     where
         F: for<'c> SingletonFnWithArg<'c, Self::Inner, A, R> + Send,
         A: Send,
         R: Send;
 
-    /// Use the singleton with an immutable reference and an argument.
-    // F: Function to be run.
-    // A: Function argument.
-    // R: Function result (to be wrapped by anyhow::Result).
-    #[cfg(feature = "singleton_boxes")]
-    async fn use_singleton_with_arg<A, R>(
-        clojure: Box<
-            dyn for<'c> SingletonFnWithArg<
-                    SingletonResult = Box<dyn Future<Output = anyhow::Result<R>>>,
-                    'c,
-                    Self::Inner,
-                    A,
-                    R,
-                > + Send,
-        >,
-        arg: A,
-    ) -> anyhow::Result<R>
-    where
-        A: Send,
-        R: Send;
-
     /// Use the singleton with a mutable reference.
     // F: Function to be run.
     // R: Function result (to be wrapped by anyhow::Result).
-    #[cfg(feature = "singleton_generics")]
     async fn use_mut_singleton<F, R>(clojure: F) -> anyhow::Result<R>
     where
         F: for<'c> SingletonFnMut<'c, Self::Inner, R> + Send,
         R: Send;
 
-    /// Use the singleton with a mutable reference.
-    // F: Function to be run.
-    // R: Function result (to be wrapped by anyhow::Result).
-    #[cfg(feature = "singleton_boxes")]
-    async fn use_mut_singleton<R>(
-        clojure: Box<
-            dyn for<'c> SingletonFnMut<
-                    SingletonResult = Box<dyn Future<Output = anyhow::Result<R>>>,
-                    'c,
-                    Self::Inner,
-                    R,
-                > + Send,
-        >,
-    ) -> anyhow::Result<R>
-    where
-        R: Send;
-
     /// Use the singleton with an immutable reference and an argument.
     // F: Function to be run.
     // A: Function argument.
     // R: Function result (to be wrapped by anyhow::Result).
-    #[cfg(feature = "singleton_generics")]
     async fn use_mut_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> anyhow::Result<R>
     where
         F: for<'c> SingletonFnMutWithArg<'c, Self::Inner, A, R> + Send,
-        A: Send,
-        R: Send;
-
-    /// Use the singleton with an immutable reference and an argument.
-    // F: Function to be run.
-    // A: Function argument.
-    // R: Function result (to be wrapped by anyhow::Result).
-    #[cfg(feature = "singleton_boxes")]
-    async fn use_mut_singleton_with_arg<A, R>(
-        clojure: Box<
-            dyn for<'c> SingletonFnMutWithArg<
-                    SingletonResult = Box<dyn Future<Output = anyhow::Result<R>>>,
-                    'c,
-                    Self::Inner,
-                    A,
-                    R,
-                > + Send,
-        >,
-        arg: A,
-    ) -> anyhow::Result<R>
-    where
         A: Send,
         R: Send;
 }
