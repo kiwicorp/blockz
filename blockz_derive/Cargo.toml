@@ -27,11 +27,7 @@ tokio       = "1.0.2"
 trybuild    = "1.0"
 
 [features]
-default = ["singleton_generics"]
+default = []
 
 # This feature makes blockz_derive not try to use paths starting with root(::examle::path).
 no_absolute_paths = []
-
-# singleton features
-singleton_generics = []
-singleton_boxes    = []

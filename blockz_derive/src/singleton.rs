@@ -19,7 +19,6 @@ pub fn impl_singleton_static(
     }
 }
 
-#[cfg(feature = "singleton_generics")]
 fn impl_use_singleton(singleton_name: &Ident, type_name: &Ident) -> TokenStream {
     let anyhow = paths::anyhow_path();
     let blockz = paths::blockz_path();
@@ -37,7 +36,6 @@ fn impl_use_singleton(singleton_name: &Ident, type_name: &Ident) -> TokenStream 
     }
 }
 
-#[cfg(feature = "singleton_generics")]
 fn impl_use_singleton_with_arg(singleton_name: &Ident, type_name: &Ident) -> TokenStream {
     let anyhow = paths::anyhow_path();
     let blockz = paths::blockz_path();
@@ -56,7 +54,6 @@ fn impl_use_singleton_with_arg(singleton_name: &Ident, type_name: &Ident) -> Tok
     }
 }
 
-#[cfg(feature = "singleton_generics")]
 fn impl_use_singleton_mut(singleton_name: &Ident, type_name: &Ident) -> TokenStream {
     let anyhow = paths::anyhow_path();
     let blockz = paths::blockz_path();
@@ -74,7 +71,6 @@ fn impl_use_singleton_mut(singleton_name: &Ident, type_name: &Ident) -> TokenStr
     }
 }
 
-#[cfg(feature = "singleton_generics")]
 fn impl_use_singleton_mut_with_arg(singleton_name: &Ident, type_name: &Ident) -> TokenStream {
     let anyhow = paths::anyhow_path();
     let blockz = paths::blockz_path();
@@ -83,121 +79,6 @@ fn impl_use_singleton_mut_with_arg(singleton_name: &Ident, type_name: &Ident) ->
         async fn use_mut_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> #anyhow::Result<R>
         where
             F: for<'c> #blockz::singleton::SingletonFnMutWithArg<'c, Self::Inner, A, R> + Send,
-            A: Send,
-            R: Send
-        {
-            let mut inner = #singleton_name.get().unwrap().lock().await;
-            let inner_deref: &mut #type_name = &mut *inner;
-            clojure.call_once(inner_deref, arg).await
-        }
-    }
-}
-
-#[cfg(feature = "singleton_boxes")]
-fn impl_use_singleton(singleton_name: &Ident, type_name: &Ident) -> TokenStream {
-    let anyhow = paths::anyhow_path();
-    let blockz = paths::blockz_path();
-    let std = paths::std_path();
-    quote! {
-        /// Run an async function using an immutable #type_name.
-        async fn use_singleton<R>(
-            clojure: Box<
-                dyn for<'c> #blockz::singleton::SingletonFn<
-                        SingletonResult = Box<dyn #std::future::Future<Output = #anyhow::Result<R>>>,
-                        'c,
-                        Self::Inner,
-                        R,
-                    > + Send
-            >,
-        ) -> #anyhow::Result<R>
-        where
-            R: Send,
-        {
-            let inner = #singleton_name.get().unwrap().lock().await;
-            let inner_deref: &#type_name = &*inner;
-            clojure.call_once(inner_deref).await
-        }
-    }
-}
-
-#[cfg(feature = "singleton_boxes")]
-fn impl_use_singleton_with_arg(singleton_name: &Ident, type_name: &Ident) -> TokenStream {
-    let anyhow = paths::anyhow_path();
-    let blockz = paths::blockz_path();
-    let std = paths::std_path();
-    quote! {
-        /// Use the singleton with an immutable reference and an argument.
-        async fn use_singleton_with_arg<A, R>(
-            clojure: Box<
-                dyn for<'c> #blockz::singleton::SingletonFnWithArg<
-                        SingletonResult = Box<dyn #std::future::Future<Output = #anyhow::Result<R>>>,
-                        'c,
-                        Self::Inner,
-                        A,
-                        R,
-                    > + Send,
-            >,
-            arg: A,
-        ) -> #anyhow::Result<R>
-        where
-            A: Send,
-            R: Send
-        {
-            let inner = #singleton_name.get().unwrap().lock().await;
-            let inner_deref: &#type_name = &*inner;
-            clojure.call_once(inner_deref, arg).await
-        }
-    }
-}
-
-#[cfg(feature = "singleton_boxes")]
-fn impl_use_singleton_mut(singleton_name: &Ident, type_name: &Ident) -> TokenStream {
-    let anyhow = paths::anyhow_path();
-    let blockz = paths::blockz_path();
-    let std = paths::std_path();
-    quote! {
-        /// Run an async function using a mutable #type_name.
-        async fn use_mut_singleton<R>(
-            clojure: Box<
-                dyn for<'c> #blockz::singleton::SingletonFnMut<
-                        SingletonResult = Box<dyn #std::future::Future<Output = #anyhow::Result<R>>>,
-                        'c,
-                        Self::Inner,
-                        R,
-                    > + Send,
-            >,
-        ) -> #anyhow::Result<R>
-        where
-            R: Send,
-        {
-            let mut inner = #singleton_name.get().unwrap().lock().await;
-            let inner_deref: &mut #type_name = &mut *inner;
-            clojure.call_once(inner_deref).await
-        }
-
-    }
-}
-
-#[cfg(feature = "singleton_boxes")]
-fn impl_use_singleton_mut_with_arg(singleton_name: &Ident, type_name: &Ident) -> TokenStream {
-    let anyhow = paths::anyhow_path();
-    let blockz = paths::blockz_path();
-    let std = paths::std_path();
-    quote! {
-        /// Use the singleton with an immutable reference and an argument.
-        async fn use_mut_singleton_with_arg<A, R>(
-            clojure: Box<
-                dyn for<'c> #blockz::singleton::SingletonFnMutWithArg<
-                        SingletonResult = Box<dyn #std::future::Future<Output = #anyhow::Result<R>>>,
-                        'c,
-                        Self::Inner,
-                        A,
-                        R,
-                    > + Send,
-            >,
-            arg: A
-        ) -> #anyhow::Result<R>
-        where
             A: Send,
             R: Send
         {
