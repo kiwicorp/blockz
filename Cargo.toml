@@ -21,7 +21,13 @@ once_cell   = "^1.5"
 serde       = "^1.0"
 
 [features]
-default = []
+default = ["configuration", "singleton"]
+
+# Enables the singleton trait and singleton derives.
+singleton = ["blockz_derive/singleton"]
+
+# Enables the configuration trait and configuration derives.
+configuration = ["blockz_derive/configuration"]
 
 # Pass this feature to blockz_derive.
 no_absolute_paths = ["blockz_derive/no_absolute_paths"]
