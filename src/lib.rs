@@ -11,7 +11,9 @@ pub mod singleton;
 /// Prelude for blockz.
 pub mod prelude {
     pub use crate::component::ComponentExt;
+    #[cfg(feature = "configuration")]
     pub use crate::configuration::Configuration;
     pub use crate::derive::*;
+    #[cfg(feature = "singleton")]
     pub use crate::singleton::Singleton;
 }
