@@ -3,11 +3,15 @@
 #[macro_use]
 extern crate quote;
 
+#[cfg(feature = "configuration")]
 mod configuration;
 mod paths;
+#[cfg(feature = "singleton")]
 mod singleton;
 
+#[cfg(feature = "singleton")]
 use convert_case::Case;
+#[cfg(feature = "singleton")]
 use convert_case::Casing;
 
 use proc_macro2::Ident;
@@ -35,6 +39,7 @@ use syn::DeriveInput;
 /// [blockz]: https://github.com/selftechio/blockz
 /// [once_cell]: https://docs.rs/once_cell
 /// [tokio]: https://docs.rs/tokio
+#[cfg(feature = "singleton")]
 #[proc_macro_derive(Singleton)]
 pub fn derive_singleton(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -75,6 +80,7 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
 /// [blockz]: https://github.com/selftechio/blockz
 /// [config]: https://docs.rs/config
 #[proc_macro_derive(Configuration, attributes(config))]
+#[cfg(feature = "configuration")]
 pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
