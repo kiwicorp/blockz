@@ -9,7 +9,7 @@ PKG_EXPANDED = $(shell for pkg in $(PKG); do printf "%s" "--package $${pkg} "; d
 
 # Flag that targets artifacts in release mode.
 RELEASE ?= 0
-RELEASE_EXPANDED = $(shell if [[ "$(VERBOSE)" == "1" ]]; then printf "%s" "--release "; fi)
+RELEASE_EXPANDED = $(shell if [[ "$(RELEASE)" == "1" ]]; then printf "%s" "--release "; fi)
 
 # Target triple that cargo should run for.
 TARGET ?=
