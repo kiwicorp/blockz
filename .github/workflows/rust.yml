@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
 
     steps:
@@ -36,14 +36,46 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Check code format
+      run: make fmt VERBOSE=1 FMTFLAGS="-- --check"
+
+    - name: Run cargo clippy
+      run: make clippy VERBOSE=1
+
     - name: Annotate commit with clippy warnings
       uses: actions-rs/clippy-check@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        # args: --all-features
 
-    - name: Build
-      run: cargo build --verbose --workspace
+  build-test:
+    runs-on: ubuntu-latest
 
-    - name: Run tests
-      run: cargo test --verbose --workspace
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache cargo directories
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache cargo target dir
+      uses: actions/cache@v2
+      with:
+        path: target
+        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build (debug)
+      run: make build VERBOSE=1
+
+    - name: Build (release)
+      run: make build VERBOSE=1 RELEASE=1
+
+    - name: Test (debug)
+      run: make test VERBOSE=1
+
+    - name: Test (release)
+      run: make test VERBOSE=1 RELEASE=1
