@@ -1,5 +1,8 @@
 # blockz makefile
 
+# Use bash for running shell commands.
+SHELL = /bin/bash
+
 # Make cargo only run for a certain package.
 PKG ?= blockz blockz_derive
 PKG_EXPANDED = $(shell for pkg in $(PKG); do printf "%s" "--package $${pkg} "; done)
