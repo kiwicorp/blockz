@@ -10,9 +10,7 @@ struct Dummy(Vec<i32>);
 impl Dummy {
     #[singleton_fn]
     async fn get_set(&mut self, get: usize, set: i32) -> Option<i32> {
-        let get_value = self.0
-            .get(get)
-            .map(|val| val.clone());
+        let get_value = self.0.get(get).map(|val| val.clone());
         if get_value.is_none() {
             None
         } else {
