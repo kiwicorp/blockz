@@ -1,4 +1,4 @@
-//! Paths.
+//! Paths to libraries used by the expansion of blockz proc-macros.
 
 use proc_macro2::TokenStream;
 
