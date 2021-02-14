@@ -2,6 +2,8 @@
 
 use proc_macro2::TokenStream;
 
+use quote::quote;
+
 #[cfg(feature = "no_absolute_paths")]
 pub fn anyhow_path() -> TokenStream {
     quote! { anyhow }
