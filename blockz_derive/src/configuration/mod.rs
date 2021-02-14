@@ -5,7 +5,21 @@ use crate::paths;
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 
-pub fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
+use quote::quote;
+
+use syn::DeriveInput;
+
+pub(crate) fn derive_configuration(input: DeriveInput) -> TokenStream {
+    let type_name = &input.ident;
+
+    let impl_configuration = impl_configuration_trait(type_name);
+
+    quote! {
+        #impl_configuration
+    }
+}
+
+fn impl_configuration_trait(type_name: &Ident) -> TokenStream {
     let anyhow = paths::anyhow_path();
     let blockz = paths::blockz_path();
     let envy = paths::envy_path();
