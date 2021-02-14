@@ -2,14 +2,43 @@
 
 use crate::paths;
 
+use convert_case::Case;
+use convert_case::Casing;
+
 use proc_macro2::Ident;
+use proc_macro2::Span;
 use proc_macro2::TokenStream;
 
+use quote::quote;
+
+use syn::DeriveInput;
+use syn::ItemFn;
+
+pub(crate) fn derive_singleton(input: DeriveInput) -> TokenStream {
+    let upper_snake = {
+        let original = format!("{}", &input.ident);
+        original.to_case(Case::UpperSnake)
+    };
+    let singleton_name = &Ident::new(upper_snake.as_str(), Span::call_site());
+    let type_name = &input.ident;
+
+    let impl_singleton = impl_singleton_trait(type_name, singleton_name);
+    let singleton_static = impl_singleton_static(type_name, singleton_name);
+
+    quote! {
+        #singleton_static
+        #impl_singleton
+    }
+}
+
+pub(crate) fn singleton_fn(function: ItemFn) -> TokenStream {
+    quote! {
+        #function
+    }
+}
+
 /// Implement the singleton static.
-pub fn impl_singleton_static(
-    type_name: &Ident,
-    singleton_name: &Ident,
-) -> proc_macro2::TokenStream {
+fn impl_singleton_static(type_name: &Ident, singleton_name: &Ident) -> proc_macro2::TokenStream {
     let once_cell = paths::once_cell_path();
     let tokio = paths::tokio_path();
     quote! {
@@ -90,7 +119,7 @@ fn impl_use_singleton_mut_with_arg(singleton_name: &Ident, type_name: &Ident) ->
 }
 
 /// Implement the singleton trait.
-pub fn impl_singleton_trait(type_name: &Ident, singleton_name: &Ident) -> proc_macro2::TokenStream {
+fn impl_singleton_trait(type_name: &Ident, singleton_name: &Ident) -> proc_macro2::TokenStream {
     let anyhow = paths::anyhow_path();
     let blockz = paths::blockz_path();
     let tokio = paths::tokio_path();
