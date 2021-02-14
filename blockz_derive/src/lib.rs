@@ -1,26 +1,18 @@
 //! Blockz derive.
 
-#[macro_use]
-extern crate quote;
-
 #[cfg(feature = "configuration")]
 mod configuration;
-mod paths;
+
 #[cfg(feature = "singleton")]
 mod singleton;
 
-#[cfg(feature = "singleton")]
-use convert_case::Case;
-#[cfg(feature = "singleton")]
-use convert_case::Casing;
-
-use proc_macro2::Ident;
-use proc_macro2::Span;
+mod paths;
 
 use proc_macro::TokenStream;
 
 use syn::parse_macro_input;
 use syn::DeriveInput;
+use syn::ItemFn;
 
 /// Derive the Singleton trait.
 ///
@@ -43,23 +35,13 @@ use syn::DeriveInput;
 #[proc_macro_derive(Singleton)]
 pub fn derive_singleton(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
+    TokenStream::from(singleton::derive_singleton(input))
+}
 
-    let upper_snake = {
-        let original = format!("{}", &input.ident);
-        original.to_case(Case::UpperSnake)
-    };
-    let singleton_name = &Ident::new(upper_snake.as_str(), Span::call_site());
-    let type_name = &input.ident;
-
-    let impl_singleton = singleton::impl_singleton_trait(type_name, singleton_name);
-    let singleton_static = singleton::impl_singleton_static(type_name, singleton_name);
-
-    let expanded = quote! {
-        #singleton_static
-        #impl_singleton
-    };
-
-    TokenStream::from(expanded)
+#[proc_macro_attribute]
+pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemFn);
+    TokenStream::from(singleton::singleton_fn(input))
 }
 
 /// Derive the Configuration trait.
@@ -83,15 +65,7 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
 #[cfg(feature = "configuration")]
 pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-
-    let type_name = &input.ident;
-
-    let impl_configuration = configuration::impl_configuration_trait(type_name);
-
-    let expanded = quote! {
-        #impl_configuration
-    };
-    TokenStream::from(expanded)
+    TokenStream::from(configuration::derive_configuration(input))
 }
 
 #[cfg(test)]
