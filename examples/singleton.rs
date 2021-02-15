@@ -1,4 +1,4 @@
-//! Singleton tests.
+//! Singleton example.
 
 #![cfg(feature = "singleton")]
 
@@ -25,8 +25,8 @@ impl Dummy {
     }
 }
 
-#[tokio::test]
-async fn basic_usage() {
+#[tokio::main]
+async fn main() {
     Dummy::init_singleton(Dummy(vec![-5, 3])).unwrap();
 
     let get = Dummy::get_set(2 as usize, 3 as i32).await;

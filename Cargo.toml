@@ -12,6 +12,9 @@ members = [
     "blockz_derive",
 ]
 
+[[example]]
+name = "singleton"
+
 [dependencies]
 # Proc macro crate dependency.
 blockz_derive = { path = "./blockz_derive" }
