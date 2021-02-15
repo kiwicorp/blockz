@@ -67,13 +67,3 @@ pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     TokenStream::from(configuration::derive_configuration(input))
 }
-
-#[cfg(test)]
-mod test {
-    #[test]
-    fn ui() {
-        let t = trybuild::TestCases::new();
-
-        t.pass("test/basic_derive.rs");
-    }
-}
