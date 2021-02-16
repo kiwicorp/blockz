@@ -102,6 +102,8 @@ CTEST = cargo test \
 # Default recipe.
 all: clippy
 
+# Commands.
+
 bench:
 	$(CBENCH)
 .PHONY: bench
@@ -130,14 +132,6 @@ fmt:
 	$(CFMT)
 .PHONY: fmt
 
-test: singleton configuration
-
-# Tests
-
-singleton:
-	$(CTEST) --features singleton
-.PHONY: singleton
-
-configuration:
-	$(CTEST) --features configuration
-.PHONY: configuration
+test:
+	$(CTEST)
+.PHONY: test
