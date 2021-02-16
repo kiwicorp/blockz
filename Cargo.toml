@@ -12,9 +12,6 @@ members = [
     "blockz_derive",
 ]
 
-[[example]]
-name = "singleton"
-
 [dependencies]
 # Proc macro crate dependency.
 blockz_derive = { path = "./blockz_derive" }
@@ -26,9 +23,7 @@ once_cell   = "^1.5"
 serde       = "^1.0"
 
 [dev-dependencies]
-anyhow      = "^1.0"
-async-trait = "^0.1"
-once_cell   = "^1.5"
+trybuild    = "^1.0"
 
 [dev-dependencies.tokio]
 version  = "^1.0"
