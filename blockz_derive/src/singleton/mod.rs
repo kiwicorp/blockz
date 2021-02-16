@@ -14,17 +14,42 @@ use quote::quote;
 use syn::DeriveInput;
 use syn::ItemFn;
 
+thread_local! {
+    /// Map for getting singleton identifiers for constructing singleton fns
+    /// without having to inject any useless code into the generated code.
+    static SINGLETON_IDENTS: RefCell<HashMap<String, Ident>> = RefCell::new(HashMap::new());
+}
+
 pub(crate) fn derive_singleton(input: DeriveInput) -> TokenStream {
+    // create an identifier string for the singleton static
     let upper_snake = {
-        let original = format!("{}", &input.ident);
+        let original = format!("_BLOCKZ_SINGLETON_{}", &input.ident);
         original.to_case(Case::UpperSnake)
     };
-    let singleton_name = &Ident::new(upper_snake.as_str(), Span::call_site());
-    let type_name = &input.ident;
 
-    let impl_singleton = impl_singleton_trait(type_name, singleton_name);
-    let singleton_static = impl_singleton_static(type_name, singleton_name);
+    // create the singleton and type identifiers
+    let singleton_name = Ident::new(upper_snake.as_str(), Span::call_site());
+    let type_name = input.ident;
 
+    // create the singleton trait and static implementations
+    let impl_singleton = impl_singleton_trait(&type_name, &singleton_name);
+    let singleton_static = impl_singleton_static(&type_name, &singleton_name);
+
+    // add the name of the singleton static to the map
+    // these can be used later for singleton fns
+    SINGLETON_IDENTS.with(move |idents| {
+        let mut idents = idents.borrow_mut();
+        let type_name = type_name.to_string();
+        if idents.contains_key(type_name.as_str()) {
+            panic!(
+                "Singleton already implemented for {}: found existing singleton ident.",
+                type_name.as_str()
+            );
+        }
+        idents.insert(type_name, singleton_name);
+    });
+
+    // return the implementation
     quote! {
         #singleton_static
         #impl_singleton
