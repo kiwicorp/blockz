@@ -35,5 +35,6 @@ async fn main() {
     let get = Dummy::get_set(0 as usize, -4 as i32).await;
     assert_eq!(get, Some(-5));
 
-    assert!(Dummy::check_equals(&[-4, 3]).await);
+    let arr: [i32; 2] = [-4, 3];
+    assert!(Dummy::check_equals(&arr).await);
 }
