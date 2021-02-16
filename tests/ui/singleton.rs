@@ -1,4 +1,4 @@
-//! Singleton example.
+//! Singleton ui test.
 
 #![cfg(feature = "singleton")]
 
