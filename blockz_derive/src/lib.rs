@@ -6,6 +6,7 @@ mod configuration;
 #[cfg(feature = "singleton")]
 mod singleton;
 
+mod common;
 mod paths;
 
 use proc_macro::TokenStream;
