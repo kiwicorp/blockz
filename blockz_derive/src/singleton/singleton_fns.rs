@@ -47,6 +47,7 @@ pub(super) fn impl_singleton_fn_facade(base: &ItemFn, impl_fn: &ItemFn) -> ItemF
     replace_fn_block(
         &mut facade_fn,
         quote! {
+            #[allow(unused_imports)]
             use blockz::singleton::Singleton;
             Self::use_singleton(Self::#impl_fn_ident).await
         },
