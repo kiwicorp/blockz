@@ -35,6 +35,21 @@ pub(super) fn impl_singleton_fn(base: &ItemFn) -> ItemFn {
     impl_fn
 }
 
+/// Implement a SingletonFnMut.
+pub(super) fn impl_singleton_fn_mut(base: &ItemFn) -> ItemFn {
+    // clone the base
+    let mut impl_fn = base.clone();
+    // make the impl fn private
+    impl_fn.vis = Visibility::Inherited;
+    // rename the function
+    rename_fn(
+        &mut impl_fn,
+        format!("{}{}", SINGLETON_FN_MUT_PREFIX, base.sig.ident.to_string()),
+    );
+    // return the impl fn
+    impl_fn
+}
+
 /// Implement the facade for a SingletonFn.
 pub(super) fn impl_singleton_fn_facade(base: &ItemFn, impl_fn: &ItemFn) -> ItemFn {
     // clone the base
@@ -50,6 +65,27 @@ pub(super) fn impl_singleton_fn_facade(base: &ItemFn, impl_fn: &ItemFn) -> ItemF
             #[allow(unused_imports)]
             use blockz::singleton::Singleton;
             Self::use_singleton(Self::#impl_fn_ident).await
+        },
+    );
+    // return the facade fn
+    facade_fn
+}
+
+/// Implement the facade for a SingletonFnMut.
+pub(super) fn impl_singleton_fn_mut_facade(base: &ItemFn, impl_fn: &ItemFn) -> ItemFn {
+    // clone the base
+    let mut facade_fn = base.clone();
+    // remove the receiver
+    remove_fn_receiver(&mut facade_fn);
+    // get impl fn ident
+    let impl_fn_ident = &impl_fn.sig.ident;
+    // replace the function impl
+    replace_fn_block(
+        &mut facade_fn,
+        quote! {
+            #[allow(unused_imports)]
+            use blockz::singleton::Singleton;
+            Self::use_mut_singleton(Self::#impl_fn_ident).await
         },
     );
     // return the facade fn

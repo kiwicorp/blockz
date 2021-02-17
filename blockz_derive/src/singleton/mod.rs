@@ -52,8 +52,16 @@ pub(crate) fn singleton_fn_with_arg(function: ItemFn) -> TokenStream {
 
 /// #[singleton_fn_mut]
 pub(crate) fn singleton_fn_mut(function: ItemFn) -> TokenStream {
+    // create base function
+    let base = &function;
+    // create impl fn
+    let impl_fn = singleton_fns::impl_singleton_fn_mut(base);
+    // create facade fn
+    let facade_fn = singleton_fns::impl_singleton_fn_mut_facade(base, &impl_fn);
+
     quote! {
-        #function
+        #impl_fn
+        #facade_fn
     }
 }
 
