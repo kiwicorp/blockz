@@ -39,10 +39,32 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
     TokenStream::from(singleton::derive_singleton(input))
 }
 
+#[cfg(feature = "singleton")]
 #[proc_macro_attribute]
 pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
     TokenStream::from(singleton::singleton_fn(input))
+}
+
+#[cfg(feature = "singleton")]
+#[proc_macro_attribute]
+pub fn singleton_fn_with_arg(_: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemFn);
+    TokenStream::from(singleton::singleton_fn_with_arg(input))
+}
+
+#[cfg(feature = "singleton")]
+#[proc_macro_attribute]
+pub fn singleton_fn_mut(_: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemFn);
+    TokenStream::from(singleton::singleton_fn_mut(input))
+}
+
+#[cfg(feature = "singleton")]
+#[proc_macro_attribute]
+pub fn singleton_fn_mut_with_arg(_: TokenStream, item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as ItemFn);
+    TokenStream::from(singleton::singleton_fn_mut_with_arg(input))
 }
 
 /// Derive the Configuration trait.
