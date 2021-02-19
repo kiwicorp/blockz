@@ -12,6 +12,7 @@ use syn::FnArg;
 use syn::Ident;
 use syn::ItemFn;
 use syn::Pat;
+use syn::PatType;
 use syn::Stmt;
 use syn::Type;
 use syn::TypeTuple;
@@ -25,6 +26,164 @@ const SINGLETON_FN_WITH_ARG_PREFIX: &str = "blockz_singleton_fn_with_arg_";
 const SINGLETON_FN_MUT_PREFIX: &str = "blockz_singleton_fn_mut_";
 /// Prefix for an impl fn used by a singleton mut fn with arg.
 const SINGLETON_FN_MUT_WITH_ARG_PREFIX: &str = "blockz_singleton_fn_mut_with_arg_";
+
+/// Simplified type for function inputs (arguments).
+type FnInputs = Punctuated<FnArg, syn::token::Comma>;
+
+/// A factory that builds singleton fns.
+struct SingletonFnFactory<'f> {
+    // the base function
+    base: &'f ItemFn,
+    // the function type that will be built by the factory
+    fn_type: SingletonFn,
+}
+
+impl<'f> SingletonFnFactory<'f> {
+    /// Create a new singleton fn factory.
+    pub fn new(base: &'f ItemFn) -> Self {
+        Self {
+            base,
+            fn_type: SingletonFn::from(base),
+        }
+    }
+
+    /// Build the singleton fn facade and impl.
+    pub fn build(&self) -> TokenStream {
+        todo!("write implementation");
+        quote! {}
+    }
+}
+
+/// SingletonFn type.
+enum SingletonFn {
+    NonMut,
+    NonMutWithArg(SingletonFnArg),
+    Mut,
+    MutWithArg(SingletonFnArg),
+}
+
+/// Argument for a SingletonFn.
+enum SingletonFnArg {
+    Simple,
+    Tuple {
+        ident: Ident,
+        arg_type: TypeTuple,
+        replace_legend: Vec<(String, String)>,
+    },
+}
+
+impl From<&FnInputs> for SingletonFnArg {
+    fn from(src: &FnInputs) -> Self {
+        if src.len() == 0 {
+            // panic if there is an attempt to build a singleton fn arg from 0
+            // fn inputs
+            panic!("singleton fn arg: attempted to construct from a function that has no inputs");
+        } else if src.len() == 1 {
+            // if the function has just one arg, the impl fn does not have to
+            // have it's block "fixed"
+            Self::Simple
+        } else {
+            // create the ident for the args tuple
+            let ident = Ident::new("args", Span::call_site());
+            // collect the fn args types
+            let fn_args = src
+                .iter()
+                .filter(|arg| {
+                    if let FnArg::Receiver(_) = arg {
+                        false
+                    } else {
+                        true
+                    }
+                })
+                .map(|arg| {
+                    if let FnArg::Typed(val) = arg {
+                        val
+                    } else {
+                        panic!("singleton fn arg: attempted to use receiver as tuple arg type")
+                    }
+                })
+                .collect::<Vec<&PatType>>();
+            // create the tuple arg type
+            let arg_type = {
+                let elems = fn_args
+                    .iter()
+                    .map(|arg| *arg.ty.clone())
+                    .collect::<Punctuated<Type, syn::token::Comma>>();
+                TypeTuple {
+                    paren_token: syn::token::Paren {
+                        span: Span::call_site(),
+                    },
+                    elems,
+                }
+            };
+            // create the replacement legend for fixing the impl fn block
+            let replace_legend = fn_args
+                .iter()
+                .enumerate()
+                .map(|(index, arg)| {
+                    let arg_pat = &arg.pat;
+                    (
+                        // the name of the argument
+                        format!("{}", quote! {#arg_pat}),
+                        // the tuple element replacement
+                        format!("{} . {}", quote! {#ident}, index),
+                    )
+                })
+                .collect::<Vec<(String, String)>>();
+            Self::Tuple {
+                ident,
+                arg_type,
+                replace_legend,
+            }
+        }
+    }
+}
+
+impl<'f> From<&'f ItemFn> for SingletonFn {
+    fn from(base: &'f ItemFn) -> Self {
+        // panic if the function has no inputs
+        if base.sig.inputs.len() == 0 {
+            panic!(
+                "{} {} {}",
+                "singleton fn: from item fn: attempted to construct",
+                "singleton fn from fn that has no inputs (must have at",
+                "least a receiver)",
+            );
+        }
+        // get the receiver
+        // panic if the receiver is not either self, &self or &mut self
+        let receiver = if let FnArg::Receiver(val) = base
+            .sig
+            .inputs
+            .first()
+            .expect("singleton fn: from item fn: attempted to construct a singleton fn from an fn that has no inputs")
+        {
+            val
+        } else {
+            panic!("singleton fn: from item fn: attempted to construct a singleton fn from a fn that does not have a receiver");
+        };
+        // panic if the receiver is not a reference
+        if receiver.reference.is_none() {
+            panic!("singleton fn: from item fn: attempted to construct a singleton fn from a fn whose receiver is not a reference")
+        }
+        // check whether the function has other args or not
+        let has_args = base.sig.inputs.len() > 1;
+        // return the singleton fn type
+        if receiver.mutability.is_none() {
+            if !has_args {
+                Self::NonMut
+            } else {
+                Self::NonMutWithArg(SingletonFnArg::from(&base.sig.inputs))
+            }
+        } else {
+            if !has_args {
+                Self::Mut
+            } else {
+                Self::MutWithArg(SingletonFnArg::from(&base.sig.inputs))
+            }
+        }
+    }
+}
 
 /// Implement a SingletonFn.
 pub(super) fn impl_singleton_fn(base: &ItemFn) -> ItemFn {
@@ -299,7 +458,8 @@ fn fn_inputs_to_type_tuple(src: &[&FnArg]) -> TypeTuple {
 ///
 /// Replaces all non-receiver args by a single tuple.
 fn fn_fix_inputs(src: &mut ItemFn, tuple: &TypeTuple) {
-    let tuple_arg: FnArg = syn::parse2(quote!{args: #tuple}).expect("Failed to parse new fn inputs.");
+    let tuple_arg: FnArg =
+        syn::parse2(quote! {args: #tuple}).expect("Failed to parse new fn inputs.");
     // if let FnArg::Receiver(_) = tuple {
     //     panic!("Tuple arg must not be a receiver!");
     // }
@@ -319,9 +479,13 @@ fn fn_fix_block(block: Block, src: &[&FnArg], tuple_name: &str) -> Block {
     let args_str = src
         .iter()
         .map(|arg| {
-            if let FnArg::Typed(val) = arg { val } else { panic!("fn arg must not be receiver") }
+            if let FnArg::Typed(val) = arg {
+                val
+            } else {
+                panic!("fn arg must not be receiver")
+            }
         })
-        .map(|arg| *arg.pat.clone() )
+        .map(|arg| *arg.pat.clone())
         .enumerate()
         .map(|(i, arg)| {
             (
