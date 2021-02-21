@@ -21,6 +21,7 @@ fn impl_use_singleton(singleton_name: &Ident, type_name: &Ident) -> TokenStream 
     // return implementation
     quote! {
         #doc
+        #[automatically_derived]
         async fn use_singleton<F, R>(clojure: F) -> #anyhow::Result<R>
         where
             F: for<'c> #blockz::singleton::SingletonFn<'c, #type_name, R> + Send,
@@ -45,6 +46,7 @@ fn impl_use_singleton_with_arg(singleton_name: &Ident, type_name: &Ident) -> Tok
     // return implementation
     quote! {
         #doc
+        #[automatically_derived]
         async fn use_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> #anyhow::Result<R>
         where
             F: for<'c> #blockz::singleton::SingletonFnWithArg<'c, Self::Inner, A, R> + Send,
@@ -70,6 +72,7 @@ fn impl_use_singleton_mut(singleton_name: &Ident, type_name: &Ident) -> TokenStr
     // return implementation
     quote! {
         #doc
+        #[automatically_derived]
         async fn use_mut_singleton<F, R>(clojure: F) -> #anyhow::Result<R>
         where
             F: for<'c> #blockz::singleton::SingletonFnMut<'c, Self::Inner, R> + Send,
@@ -94,6 +97,7 @@ fn impl_use_singleton_mut_with_arg(singleton_name: &Ident, type_name: &Ident) ->
     // return implementation
     quote! {
         #doc
+        #[automatically_derived]
         async fn use_mut_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> #anyhow::Result<R>
         where
             F: for<'c> #blockz::singleton::SingletonFnMutWithArg<'c, Self::Inner, A, R> + Send,
@@ -118,6 +122,7 @@ fn impl_init_singleton(singleton_name: &Ident, type_name: &Ident) -> TokenStream
     // return implementation
     quote! {
         #doc
+        #[automatically_derived]
         fn init_singleton(inner: Self::Inner) -> #anyhow::Result<()> {
             if #singleton_name.set(#tokio::sync::Mutex::new(inner)).is_err() {
                 Err(anyhow::anyhow!(#err_msg))

@@ -38,6 +38,7 @@ pub(super) fn impl_singleton_static(
     // return implementation
     quote! {
         #doc
+        #[automatically_derived]
         static #singleton_name: #once_cell::sync::OnceCell<#tokio::sync::Mutex<#type_name>> =
             #once_cell::sync::OnceCell::new();
     }
