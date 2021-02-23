@@ -201,7 +201,7 @@ impl<'f> TryFrom<&[&'f PatType]> for SingletonFnArgs<'f> {
             let tuple_type = {
                 let elems = src
                     .iter()
-                    .map(|arg| *arg.ty)
+                    .map(|arg| *arg.ty.clone())
                     .collect::<Punctuated<Type, syn::token::Comma>>();
                 TypeTuple {
                     paren_token: syn::token::Paren {
