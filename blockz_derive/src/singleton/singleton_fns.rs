@@ -1,113 +1,207 @@
 //! Singleton fns utilities.
 
+use std::convert::TryFrom;
+
 use proc_macro2::Span;
 use proc_macro2::TokenStream;
 
 use quote::quote;
 
 use syn::punctuated::Punctuated;
-use syn::token::Comma;
-use syn::Block;
+use syn::spanned::Spanned;
+use syn::Error;
 use syn::FnArg;
 use syn::Ident;
 use syn::ItemFn;
 use syn::Pat;
 use syn::PatType;
-use syn::Stmt;
+use syn::Receiver;
 use syn::Type;
 use syn::TypeTuple;
-use syn::Visibility;
 
-/// Prefix for an impl fn used by a singleton fn.
-const SINGLETON_FN_PREFIX: &str = "blockz_singleton_fn_";
-/// Prefix for an impl fn used by a singleton fn with arg.
-const SINGLETON_FN_WITH_ARG_PREFIX: &str = "blockz_singleton_fn_with_arg_";
-/// Prefix for an impl fn used by a singleton mut fn.
-const SINGLETON_FN_MUT_PREFIX: &str = "blockz_singleton_fn_mut_";
-/// Prefix for an impl fn used by a singleton mut fn with arg.
-const SINGLETON_FN_MUT_WITH_ARG_PREFIX: &str = "blockz_singleton_fn_mut_with_arg_";
+/// The name of the tuple argument for singleton fns.
+const SINGLETON_FN_TUPLE_ARG_NAME: &str = "args";
 
 /// Simplified type for function inputs (arguments).
 type FnInputs = Punctuated<FnArg, syn::token::Comma>;
 
-/// A factory that builds singleton fns.
-struct SingletonFnFactory<'f> {
-    // the base function
-    base: &'f ItemFn,
-    // the function type that will be built by the factory
-    fn_type: SingletonFn,
-}
-
-impl<'f> SingletonFnFactory<'f> {
-    /// Create a new singleton fn factory.
-    pub fn new(base: &'f ItemFn) -> Self {
-        Self {
-            base,
-            fn_type: SingletonFn::from(base),
-        }
-    }
-
-    /// Build the singleton fn facade and impl.
-    pub fn build(&self) -> TokenStream {
-        todo!("write implementation");
-        quote! {}
-    }
-}
-
 /// SingletonFn type.
-enum SingletonFn {
+pub(super) enum SingletonFnType<'f> {
     NonMut,
-    NonMutWithArg(SingletonFnArg),
+    NonMutWithArg(SingletonFnArgs<'f>),
     Mut,
-    MutWithArg(SingletonFnArg),
+    MutWithArg(SingletonFnArgs<'f>),
 }
 
-/// Argument for a SingletonFn.
-enum SingletonFnArg {
-    Simple,
-    Tuple {
-        ident: Ident,
-        arg_type: TypeTuple,
-        replace_legend: Vec<(String, String)>,
+/// Arguments for a SingletonFn.
+pub(super) enum SingletonFnArgs<'f> {
+    /// Single argument.
+    ///
+    /// This is passed as-is to the singleton function.
+    Single {
+        /// The identifier of the function argument.
+        arg_ident: &'f Ident,
+        /// The type of the function argument.
+        arg_type: &'f Type,
+    },
+    /// Multiple arguments.
+    ///
+    /// These need to be converted to a single argument as a tuple.
+    Multiple {
+        /// The idents of the original function arguments.
+        arg_idents: Vec<&'f Ident>,
+        /// The ident of the tuple function argument.
+        tuple_ident: Ident,
+        /// The type of the tuple function argument.
+        ///
+        /// This is just a combination of the original types of the tuple function argument.
+        tuple_type: TypeTuple,
     },
 }
 
-impl From<&FnInputs> for SingletonFnArg {
-    fn from(src: &FnInputs) -> Self {
-        if src.len() == 0 {
-            // panic if there is an attempt to build a singleton fn arg from 0
-            // fn inputs
-            panic!("singleton fn arg: attempted to construct from a function that has no inputs");
-        } else if src.len() == 1 {
-            // if the function has just one arg, the impl fn does not have to
-            // have it's block "fixed"
-            Self::Simple
+impl<'f> SingletonFnArgs<'f> {
+    /// Build the argument used for a singleton call by the facade fn.
+    ///
+    /// This will either just return the ident of the arg, if there is only
+    /// one, or it will return the code needed to build a tuple arg.
+    ///
+    /// The call arg will be used for:
+    /// Singleton::use_singleton_with_arg
+    /// or
+    /// Singleton::use_mut_singleton_with_arg
+    pub fn build_impl_fn_call_arg(&self) -> TokenStream {
+        match self {
+            SingletonFnArgs::Single { arg_ident, .. } => {
+                quote! {#arg_ident}
+            }
+            SingletonFnArgs::Multiple { arg_idents, .. } => {
+                quote! { ( #(#arg_idents),*) }
+            }
+        }
+    }
+
+    /// Build the fn input that will be accepted by the impl fn.
+    ///
+    /// This builds the `arg: (i64, u64, ...)` in the function signature.
+    pub fn build_impl_fn_sig_arg(&self) -> syn::Result<FnArg> {
+        match self {
+            SingletonFnArgs::Single {
+                arg_ident,
+                arg_type,
+            } => syn::parse2(quote! { #arg_ident: #arg_type }),
+            SingletonFnArgs::Multiple {
+                tuple_ident,
+                tuple_type,
+                ..
+            } => syn::parse2(quote! { #tuple_ident: #tuple_type }),
+        }
+    }
+}
+
+/// Get a SingletonFnType from a function.
+impl<'f> TryFrom<&'f ItemFn> for SingletonFnType<'f> {
+    type Error = syn::Error;
+    fn try_from(base: &'f ItemFn) -> syn::Result<Self> {
+        // a function must have at least one input (the receiver) to be a
+        // singleton function
+        if base.sig.inputs.len() == 0 {
+            return Err(syn::Error::new(
+                base.span(),
+                format!(
+                    "{} {} {}",
+                    "singleton fn: from item fn: attempted to construct",
+                    "singleton fn from fn that has no inputs (must have at",
+                    "least a receiver)",
+                ),
+            ));
+        }
+
+        // get the receiver
+        // return an error if the receiver is not either self, &self or
+        // &mut self
+        // safe since we have already checked that there is a non-zero number of inputs
+        let receiver = fn_arg_as_receiver(base.sig.inputs.first().unwrap())?;
+
+        // return an error if the receiver is not a reference
+        if receiver.reference.is_none() {
+            return Err(syn::Error::new(base.span(), "singleton fn: from item fn: attempted to construct a singleton fn from a fn whose receiver is not a reference"));
+        }
+
+        // check whether the function has other args or not
+        let args = {
+            if base.sig.inputs.len() == 1 {
+                None
+            } else {
+                Some(
+                    base.sig
+                        .inputs
+                        .iter()
+                        .filter_map(|arg| {
+                            if let FnArg::Receiver(_) = arg {
+                                None
+                            } else {
+                                Some(fn_arg_as_typed(arg).unwrap())
+                            }
+                        })
+                        .collect::<Vec<&PatType>>(),
+                )
+            }
+        };
+
+        // return the singleton fn type
+        if receiver.mutability.is_none() {
+            if let Some(value) = args {
+                Ok(Self::NonMutWithArg(SingletonFnArgs::try_from(
+                    value.as_slice(),
+                )?))
+            } else {
+                Ok(Self::NonMut)
+            }
         } else {
+            if let Some(value) = args {
+                Ok(Self::MutWithArg(SingletonFnArgs::try_from(
+                    value.as_slice(),
+                )?))
+            } else {
+                Ok(Self::Mut)
+            }
+        }
+    }
+}
+
+/// Get the SingletonFnArgs for a series of typed fn args(which have a PatType inside).
+impl<'f> TryFrom<&[&'f PatType]> for SingletonFnArgs<'f> {
+    type Error = syn::Error;
+
+    fn try_from(src: &[&'f PatType]) -> syn::Result<Self> {
+        if src.len() == 0 {
+            // this should NOT happen
+            panic!("singleton fn arg: attempted to construct from a function that has no inputs")
+        } else if src.len() == 1 {
+            // the function has a single argument
+            let arg = src.first().unwrap();
+            Ok(Self::Single {
+                arg_ident: pat_type_as_ident(*arg)?,
+                arg_type: &*arg.ty,
+            })
+        } else {
+            // the function has multiple arguments
+            let arg_idents = {
+                let mut arg_idents = Vec::with_capacity(src.len());
+                for arg in src {
+                    arg_idents.push(pat_type_as_ident(arg)?);
+                }
+                arg_idents
+            };
+
             // create the ident for the args tuple
-            let ident = Ident::new("args", Span::call_site());
-            // collect the fn args types
-            let fn_args = src
-                .iter()
-                .filter(|arg| {
-                    if let FnArg::Receiver(_) = arg {
-                        false
-                    } else {
-                        true
-                    }
-                })
-                .map(|arg| {
-                    if let FnArg::Typed(val) = arg {
-                        val
-                    } else {
-                        panic!("singleton fn arg: attempted to use receiver as tuple arg type")
-                    }
-                })
-                .collect::<Vec<&PatType>>();
+            let tuple_ident = Ident::new(SINGLETON_FN_TUPLE_ARG_NAME, Span::call_site());
+
             // create the tuple arg type
-            let arg_type = {
-                let elems = fn_args
+            let tuple_type = {
+                let elems = src
                     .iter()
-                    .map(|arg| *arg.ty.clone())
+                    .map(|arg| *arg.ty)
                     .collect::<Punctuated<Type, syn::token::Comma>>();
                 TypeTuple {
                     paren_token: syn::token::Paren {
@@ -116,403 +210,48 @@ impl From<&FnInputs> for SingletonFnArg {
                     elems,
                 }
             };
-            // create the replacement legend for fixing the impl fn block
-            let replace_legend = fn_args
-                .iter()
-                .enumerate()
-                .map(|(index, arg)| {
-                    let arg_pat = &arg.pat;
-                    (
-                        // the name of the argument
-                        format!("{}", quote! {#arg_pat}),
-                        // the tuple element replacement
-                        format!("{} . {}", quote! {#ident}, index),
-                    )
-                })
-                .collect::<Vec<(String, String)>>();
-            Self::Tuple {
-                ident,
-                arg_type,
-                replace_legend,
-            }
-        }
-    }
-}
 
-impl<'f> From<&'f ItemFn> for SingletonFn {
-    fn from(base: &'f ItemFn) -> Self {
-        // panic if the function has no inputs
-        if base.sig.inputs.len() == 0 {
-            panic!(
-                "{} {} {}",
-                "singleton fn: from item fn: attempted to construct",
-                "singleton fn from fn that has no inputs (must have at",
-                "least a receiver)",
-            );
-        }
-        // get the receiver
-        // panic if the receiver is not either self, &self or &mut self
-        let receiver = if let FnArg::Receiver(val) = base
-            .sig
-            .inputs
-            .first()
-            .expect("singleton fn: from item fn: attempted to construct a singleton fn from an fn that has no inputs")
-        {
-            val
-        } else {
-            panic!("singleton fn: from item fn: attempted to construct a singleton fn from a fn that does not have a receiver");
-        };
-        // panic if the receiver is not a reference
-        if receiver.reference.is_none() {
-            panic!("singleton fn: from item fn: attempted to construct a singleton fn from a fn whose receiver is not a reference")
-        }
-        // check whether the function has other args or not
-        let has_args = base.sig.inputs.len() > 1;
-        // return the singleton fn type
-        if receiver.mutability.is_none() {
-            if !has_args {
-                Self::NonMut
-            } else {
-                Self::NonMutWithArg(SingletonFnArg::from(&base.sig.inputs))
-            }
-        } else {
-            if !has_args {
-                Self::Mut
-            } else {
-                Self::MutWithArg(SingletonFnArg::from(&base.sig.inputs))
-            }
-        }
-    }
-}
-
-/// Implement a SingletonFn.
-pub(super) fn impl_singleton_fn(base: &ItemFn) -> ItemFn {
-    // clone the base
-    let mut impl_fn = base.clone();
-    // make the impl fn private
-    impl_fn.vis = Visibility::Inherited;
-    // rename the function
-    rename_fn(
-        &mut impl_fn,
-        format!("{}{}", SINGLETON_FN_PREFIX, base.sig.ident.to_string()),
-    );
-    // return the impl fn
-    impl_fn
-}
-
-/// Implement a SingletonFnMut.
-pub(super) fn impl_singleton_fn_mut(base: &ItemFn) -> ItemFn {
-    // clone the base
-    let mut impl_fn = base.clone();
-    // make the impl fn private
-    impl_fn.vis = Visibility::Inherited;
-    // rename the function
-    rename_fn(
-        &mut impl_fn,
-        format!("{}{}", SINGLETON_FN_MUT_PREFIX, base.sig.ident.to_string()),
-    );
-    // return the impl fn
-    impl_fn
-}
-
-/// Implement a SingletonFnWithArg.
-pub(super) fn impl_singleton_fn_with_arg(base: &ItemFn) -> ItemFn {
-    // clone the base
-    let mut impl_fn = base.clone();
-    // make the impl fn private
-    impl_fn.vis = Visibility::Inherited;
-    // rename the function
-    rename_fn(
-        &mut impl_fn,
-        format!(
-            "{}{}",
-            SINGLETON_FN_WITH_ARG_PREFIX,
-            base.sig.ident.to_string()
-        ),
-    );
-    // get the tuple type that represents the args
-    let arg_type = fn_inputs_to_type_tuple(
-        base.sig
-            .inputs
-            .iter()
-            .filter(|arg| {
-                if let FnArg::Receiver(_) = arg {
-                    false
-                } else {
-                    true
-                }
+            Ok(Self::Multiple {
+                arg_idents,
+                tuple_ident,
+                tuple_type,
             })
-            .collect::<Vec<&FnArg>>()
-            .as_slice(),
-    );
-    // // create the args pattern
-    // let arg_pat: Pat = syn::parse2(quote! {args: #arg_type}).expect(
-    //     format!(
-    //         "Failed to parse singleton fn args pattern: {}",
-    //         quote! {args: #arg_type}
-    //     )
-    //     .as_str(),
-    // );
-    // let arg_pat = if let Pat::Type(val) = arg_pat {
-    //     val
-    // } else {
-    //     panic!("Failed to parse singleton fn type pattern!")
-    // };
-    // fix the fn inputs
-    fn_fix_inputs(&mut impl_fn, &arg_type);
-    // fix the fn block
-    impl_fn.block = Box::new(fn_fix_block(
-        *base.block.clone(),
-        base.sig
-            .inputs
-            .iter()
-            .filter(|arg| {
-                if let FnArg::Receiver(_) = arg {
-                    false
-                } else {
-                    true
-                }
-            })
-            .collect::<Vec<&FnArg>>()
-            .as_slice(),
-        "args", // don't harcode(although it's the same as when making arg_pat)
-    ));
-    // return the impl fn
-    impl_fn
-}
-
-/// Implement a SingletonFnWithArg.
-pub(super) fn impl_singleton_fn_mut_with_arg(base: &ItemFn) -> ItemFn {
-    // clone the base
-    let mut impl_fn = base.clone();
-    // make the impl fn private
-    impl_fn.vis = Visibility::Inherited;
-    // rename the function
-    rename_fn(
-        &mut impl_fn,
-        format!(
-            "{}{}",
-            SINGLETON_FN_MUT_WITH_ARG_PREFIX,
-            base.sig.ident.to_string()
-        ),
-    );
-    // return the impl fn
-    impl_fn
-}
-
-/// Implement the facade for a SingletonFn.
-pub(super) fn impl_singleton_fn_facade(base: &ItemFn, impl_fn: &ItemFn) -> ItemFn {
-    // clone the base
-    let mut facade_fn = base.clone();
-    // remove the receiver
-    remove_fn_receiver(&mut facade_fn);
-    // get impl fn ident
-    let impl_fn_ident = &impl_fn.sig.ident;
-    // replace the function impl
-    replace_fn_block(
-        &mut facade_fn,
-        quote! {
-            #[allow(unused_imports)]
-            use blockz::singleton::Singleton;
-            Self::use_singleton(Self::#impl_fn_ident).await
-        },
-    );
-    // return the facade fn
-    facade_fn
-}
-
-/// Implement the facade for a SingletonFnMut.
-pub(super) fn impl_singleton_fn_mut_facade(base: &ItemFn, impl_fn: &ItemFn) -> ItemFn {
-    // clone the base
-    let mut facade_fn = base.clone();
-    // remove the receiver
-    remove_fn_receiver(&mut facade_fn);
-    // get impl fn ident
-    let impl_fn_ident = &impl_fn.sig.ident;
-    // replace the function impl
-    replace_fn_block(
-        &mut facade_fn,
-        quote! {
-            #[allow(unused_imports)]
-            use blockz::singleton::Singleton;
-            Self::use_mut_singleton(Self::#impl_fn_ident).await
-        },
-    );
-    // return the facade fn
-    facade_fn
-}
-
-/// Implement the facade for a SingletonFnWithArg.
-pub(super) fn impl_singleton_fn_with_arg_facade(base: &ItemFn, impl_fn: &ItemFn) -> ItemFn {
-    // clone the base
-    let mut facade_fn = base.clone();
-    // remove the receiver
-    remove_fn_receiver(&mut facade_fn);
-    // get impl fn ident
-    let impl_fn_ident = &impl_fn.sig.ident;
-    // replace the function impl
-    replace_fn_block(
-        &mut facade_fn,
-        quote! {
-            #[allow(unused_imports)]
-            use blockz::singleton::Singleton;
-            Self::use_singleton_with_arg(Self::#impl_fn_ident, (other)).await // remove hardcoding
-        },
-    );
-    // return the facade fn
-    facade_fn
-}
-
-/// Implement the facade for a SingletonFnWithArg.
-pub(super) fn impl_singleton_fn_mut_with_arg_facade(base: &ItemFn, impl_fn: &ItemFn) -> ItemFn {
-    // clone the base
-    let mut facade_fn = base.clone();
-    // remove the receiver
-    remove_fn_receiver(&mut facade_fn);
-    // get impl fn ident
-    let impl_fn_ident = &impl_fn.sig.ident;
-    // replace the function impl
-    replace_fn_block(
-        &mut facade_fn,
-        quote! {
-            #[allow(unused_imports)]
-            use blockz::singleton::Singleton;
-            Self::use_singleton(Self::#impl_fn_ident).await
-        },
-    );
-    // return the facade fn
-    facade_fn
-}
-
-/// Remove the receiver from a function.
-fn remove_fn_receiver(function: &mut ItemFn) {
-    if let FnArg::Typed(recv) = function
-        .sig
-        .inputs
-        .first()
-        .expect(format!("Function {} should have had a receiver", function.sig.ident).as_str())
-    {
-        panic!(
-            "Function {} must have either a &self or &mut self receiver. Found receiver: {:?}.",
-            function.sig.ident, recv.ty
-        );
-    }
-    function.sig.inputs = function
-        .sig
-        .inputs
-        .iter()
-        .cloned()
-        .filter(|arg| {
-            if let FnArg::Receiver(_) = arg {
-                false
-            } else {
-                true
-            }
-        })
-        .collect();
-}
-
-/// Rename a function.
-fn rename_fn(function: &mut ItemFn, name: String) {
-    function.sig.ident = Ident::new(name.as_str(), Span::call_site());
-}
-
-/// Replace the block of a function.
-///
-/// The token stream must not include the braces.
-fn replace_fn_block(function: &mut ItemFn, block: TokenStream) {
-    let block: Block = syn::parse2(quote! {
-        {
-            #block
         }
-    })
-    .expect(format!("Failed to parse replacement block: {}", block).as_str());
-    function.block = Box::new(block);
-}
-
-/// Convert the args of a function into a tuple and a map for mapping old types
-/// to tuple variants.
-fn fn_inputs_to_type_tuple(src: &[&FnArg]) -> TypeTuple {
-    let elems: Punctuated<Type, Comma> = src
-        .iter()
-        .map(|elem| {
-            if let FnArg::Typed(val) = elem {
-                *val.ty.clone()
-            } else {
-                panic!("Cannot convert receiver to type for tuple!")
-            }
-        })
-        .collect();
-
-    // panic!("Elements: {}", quote!{ #elems });
-
-    TypeTuple {
-        paren_token: syn::token::Paren {
-            span: Span::call_site(),
-        },
-        elems,
     }
 }
 
-/// Fix the inputs of a function.
-///
-/// Replaces all non-receiver args by a single tuple.
-fn fn_fix_inputs(src: &mut ItemFn, tuple: &TypeTuple) {
-    let tuple_arg: FnArg =
-        syn::parse2(quote! {args: #tuple}).expect("Failed to parse new fn inputs.");
-    // if let FnArg::Receiver(_) = tuple {
-    //     panic!("Tuple arg must not be a receiver!");
-    // }
-    let receiver = src
-        .sig
-        .inputs
-        .first()
-        .cloned()
-        .expect("Expected the fn receiver!");
-    src.sig.inputs.clear();
-    src.sig.inputs.push(receiver);
-    src.sig.inputs.push(tuple_arg);
+/// Get a fn argument as a receiver.
+fn fn_arg_as_receiver(src: &FnArg) -> syn::Result<&Receiver> {
+    if let FnArg::Receiver(value) = src {
+        Ok(value)
+    } else {
+        Err(Error::new(
+            src.span(),
+            format!("function argument {:?} is not a receiver", src),
+        ))
+    }
 }
 
-/// Replace all inputs in the block with an element of the tuple arg.
-fn fn_fix_block(block: Block, src: &[&FnArg], tuple_name: &str) -> Block {
-    let args_str = src
-        .iter()
-        .map(|arg| {
-            if let FnArg::Typed(val) = arg {
-                val
-            } else {
-                panic!("fn arg must not be receiver")
-            }
-        })
-        .map(|arg| *arg.pat.clone())
-        .enumerate()
-        .map(|(i, arg)| {
-            (
-                format!("{}", quote! {#arg}),
-                format!("{} . {}", tuple_name, i),
-            )
-        })
-        .collect::<Vec<(String, String)>>();
-    // let stmts: Vec<Stmt> = block
-    //     .stmts
-    //     .iter()
-    //     .cloned()
-    //     .map(|stmt| {
-    //         let mut stmt_str = format!("{}", quote! {#stmt});
-    //         args_str.iter().for_each(|arg| {
-    //             stmt_str = stmt_str.replace(arg.0.as_str(), arg.1.as_str());
-    //         });
-    //         syn::parse_str::<Stmt>(stmt_str.as_str()).expect("Failed to parse mapped statement!")
-    //     })
-    //     .collect();
-    // syn::parse_str::<Block>(
-    //     stmts.join(';')
-    // )
-    // .expect("Failed to parse block!")
-    let mut block_str = format!("{}", quote! {#block});
-    args_str.iter().for_each(|arg| {
-        block_str = block_str.replace(arg.0.as_str(), arg.1.as_str());
-    });
-    syn::parse_str::<Block>(block_str.as_str()).expect("Failed to parse block!")
+/// Get a fn argument as a typed argument.
+fn fn_arg_as_typed(src: &FnArg) -> syn::Result<&PatType> {
+    if let FnArg::Typed(value) = src {
+        Ok(value)
+    } else {
+        Err(Error::new(
+            src.span(),
+            format!("function argument {:?} is not typed", src),
+        ))
+    }
+}
+
+/// Get a pat type as an ident.
+fn pat_type_as_ident(src: &PatType) -> syn::Result<&Ident> {
+    if let Pat::Ident(value) = &*src.pat {
+        Ok(&value.ident)
+    } else {
+        Err(Error::new(
+            src.span(),
+            format!("function argument {:?} does not have an ident", src),
+        ))
+    }
 }
