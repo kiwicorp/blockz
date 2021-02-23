@@ -170,12 +170,14 @@ impl<'f> FacadeFnFactory<'f> {
     fn build_facade_impl(&self, target: &mut ItemFn) -> Result<()> {
         // get the path to the blockz crate
         let blockz = paths::blockz_path();
+        // get the ident of the impl fn
+        let impl_fn_ident = &self.impl_fn.sig.ident;
         // build the singleton use statement
         let stmt = match self.fn_type {
-            SingletonFnType::NonMut => Self::build_use_singleton_stmt(&target.sig.ident),
-            SingletonFnType::NonMutWithArg(arg) => Self::build_use_singleton_with_arg_stmt(&target.sig.ident, arg),
-            SingletonFnType::Mut => Self::build_use_mut_singleton_stmt(&target.sig.ident),
-            SingletonFnType::MutWithArg(arg) => Self::build_use_mut_singleton_with_arg_stmt(&target.sig.ident, arg),
+            SingletonFnType::NonMut => Self::build_use_singleton_stmt(impl_fn_ident),
+            SingletonFnType::NonMutWithArg(arg) => Self::build_use_singleton_with_arg_stmt(impl_fn_ident, arg),
+            SingletonFnType::Mut => Self::build_use_mut_singleton_stmt(impl_fn_ident),
+            SingletonFnType::MutWithArg(arg) => Self::build_use_mut_singleton_with_arg_stmt(impl_fn_ident, arg),
         };
         // replace the block with the new impl
         Self::replace_fn_block(
