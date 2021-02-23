@@ -5,6 +5,7 @@ use crate::paths;
 use super::singleton_fns::SingletonFnArgs;
 use super::singleton_fns::SingletonFnType;
 
+use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 
 use quote::quote;
@@ -136,32 +137,32 @@ impl<'f> FacadeFnFactory<'f> {
     }
 
     /// Builds a Singleton::use_singleton.
-    fn build_use_singleton_stmt() -> TokenStream {
+    fn build_use_singleton_stmt(fn_ident: &Ident) -> TokenStream {
         quote! {
-            Self::use_singleton().await
+            Self::use_singleton(Self::#fn_ident).await
         }
     }
 
     /// Builds a Singleton::use_singleton_with_arg.
-    fn build_use_singleton_with_arg_stmt(arg: &SingletonFnArgs) -> TokenStream {
+    fn build_use_singleton_with_arg_stmt(fn_ident: &Ident, arg: &SingletonFnArgs) -> TokenStream {
         let arg = arg.build_impl_fn_call_arg();
         quote! {
-            Self::use_singleton_with_arg(#arg).await
+            Self::use_singleton_with_arg(Self::#fn_ident, #arg).await
         }
     }
 
     /// Builds a Singleton::use_mut_singleton.
-    fn build_use_mut_singleton_stmt() -> TokenStream {
+    fn build_use_mut_singleton_stmt(fn_ident: &Ident) -> TokenStream {
         quote! {
-            Self::use_mut_singleton().await
+            Self::use_mut_singleton(Self::#fn_ident).await
         }
     }
 
     /// Builds a Singleton::use_mut_singleton_with_arg.
-    fn build_use_mut_singleton_with_arg_stmt(arg: &SingletonFnArgs) -> TokenStream {
+    fn build_use_mut_singleton_with_arg_stmt(fn_ident: &Ident, arg: &SingletonFnArgs) -> TokenStream {
         let arg = arg.build_impl_fn_call_arg();
         quote! {
-            Self::use_mut_singleton_with_arg(#arg).await
+            Self::use_mut_singleton_with_arg(Self::#fn_ident, #arg).await
         }
     }
 
@@ -171,10 +172,10 @@ impl<'f> FacadeFnFactory<'f> {
         let blockz = paths::blockz_path();
         // build the singleton use statement
         let stmt = match self.fn_type {
-            SingletonFnType::NonMut => Self::build_use_singleton_stmt(),
-            SingletonFnType::NonMutWithArg(arg) => Self::build_use_singleton_with_arg_stmt(arg),
-            SingletonFnType::Mut => Self::build_use_mut_singleton_stmt(),
-            SingletonFnType::MutWithArg(arg) => Self::build_use_mut_singleton_with_arg_stmt(arg),
+            SingletonFnType::NonMut => Self::build_use_singleton_stmt(&target.sig.ident),
+            SingletonFnType::NonMutWithArg(arg) => Self::build_use_singleton_with_arg_stmt(&target.sig.ident, arg),
+            SingletonFnType::Mut => Self::build_use_mut_singleton_stmt(&target.sig.ident),
+            SingletonFnType::MutWithArg(arg) => Self::build_use_mut_singleton_with_arg_stmt(&target.sig.ident, arg),
         };
         // replace the block with the new impl
         Self::replace_fn_block(
