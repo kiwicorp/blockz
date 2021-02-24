@@ -9,6 +9,8 @@ mod singleton;
 mod common;
 mod paths;
 
+use singleton::SingletonFnFactory;
+
 use proc_macro::TokenStream;
 
 use syn::parse_macro_input;
@@ -43,28 +45,12 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
-    TokenStream::from(singleton::singleton_fn(input))
-}
-
-#[cfg(feature = "singleton")]
-#[proc_macro_attribute]
-pub fn singleton_fn_with_arg(_: TokenStream, item: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(item as ItemFn);
-    TokenStream::from(singleton::singleton_fn_with_arg(input))
-}
-
-#[cfg(feature = "singleton")]
-#[proc_macro_attribute]
-pub fn singleton_fn_mut(_: TokenStream, item: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(item as ItemFn);
-    TokenStream::from(singleton::singleton_fn_mut(input))
-}
-
-#[cfg(feature = "singleton")]
-#[proc_macro_attribute]
-pub fn singleton_fn_mut_with_arg(_: TokenStream, item: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(item as ItemFn);
-    TokenStream::from(singleton::singleton_fn_mut_with_arg(input))
+    TokenStream::from(
+        SingletonFnFactory::new(&input)
+            .expect("failed to build")
+            .build()
+            .expect("failed to build"),
+    )
 }
 
 /// Derive the Configuration trait.
