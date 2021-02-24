@@ -126,7 +126,7 @@ impl<'f> TryFrom<&'f ItemFn> for SingletonFnType<'f> {
     fn try_from(base: &'f ItemFn) -> syn::Result<Self> {
         // a function must have at least one input (the receiver) to be a
         // singleton function
-        if base.sig.inputs.len() == 0 {
+        if base.sig.inputs.is_empty() {
             return Err(syn::Error::new(
                 base.span(),
                 format!(
@@ -179,14 +179,12 @@ impl<'f> TryFrom<&'f ItemFn> for SingletonFnType<'f> {
             } else {
                 Ok(Self::NonMut)
             }
+        } else if let Some(value) = args {
+            Ok(Self::MutWithArg(SingletonFnArgs::try_from(
+                value.as_slice(),
+            )?))
         } else {
-            if let Some(value) = args {
-                Ok(Self::MutWithArg(SingletonFnArgs::try_from(
-                    value.as_slice(),
-                )?))
-            } else {
-                Ok(Self::Mut)
-            }
+            Ok(Self::Mut)
         }
     }
 }
@@ -196,7 +194,7 @@ impl<'f> TryFrom<&[&'f PatType]> for SingletonFnArgs<'f> {
     type Error = syn::Error;
 
     fn try_from(src: &[&'f PatType]) -> syn::Result<Self> {
-        if src.len() == 0 {
+        if src.is_empty() {
             // this should NOT happen
             panic!("singleton fn arg: attempted to construct from a function that has no inputs")
         } else if src.len() == 1 {

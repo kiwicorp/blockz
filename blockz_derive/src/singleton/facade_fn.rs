@@ -74,13 +74,7 @@ impl<'f> FacadeFnFactory<'f> {
             .inputs
             .iter()
             .cloned()
-            .filter(|arg| {
-                if let FnArg::Receiver(_) = arg {
-                    false
-                } else {
-                    true
-                }
-            })
+            .filter(|arg| !matches!(arg, FnArg::Receiver(_)))
             .collect();
         Ok(())
     }
@@ -114,15 +108,7 @@ impl<'f> FacadeFnFactory<'f> {
     /// Adds an #[inline(always)] to the target function.
     fn add_inline_always_attr(target: &mut ItemFn) -> Result<()> {
         let parser = Attribute::parse_outer;
-        let parsed_attrs = parser.parse2(quote! {#[inline(always)]}).expect(
-            format!(
-                "{}: {}: {}",
-                "facade fn factory",
-                "add inline always attr",
-                "failed to parse the attribute tokens",
-            )
-            .as_str(),
-        );
+        let parsed_attrs = parser.parse2(quote! {#[inline(always)]})?;
         if parsed_attrs.len() != 1 {
             panic!(
                 "{}: {}: {}: {}",
