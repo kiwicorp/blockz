@@ -159,7 +159,10 @@ impl<'f> FacadeFnFactory<'f> {
     }
 
     /// Builds a Singleton::use_mut_singleton_with_arg.
-    fn build_use_mut_singleton_with_arg_stmt(fn_ident: &Ident, arg: &SingletonFnArgs) -> TokenStream {
+    fn build_use_mut_singleton_with_arg_stmt(
+        fn_ident: &Ident,
+        arg: &SingletonFnArgs,
+    ) -> TokenStream {
         let arg = arg.build_impl_fn_call_arg();
         quote! {
             Self::use_mut_singleton_with_arg(Self::#fn_ident, #arg).await
@@ -175,9 +178,13 @@ impl<'f> FacadeFnFactory<'f> {
         // build the singleton use statement
         let stmt = match self.fn_type {
             SingletonFnType::NonMut => Self::build_use_singleton_stmt(impl_fn_ident),
-            SingletonFnType::NonMutWithArg(arg) => Self::build_use_singleton_with_arg_stmt(impl_fn_ident, arg),
+            SingletonFnType::NonMutWithArg(arg) => {
+                Self::build_use_singleton_with_arg_stmt(impl_fn_ident, arg)
+            }
             SingletonFnType::Mut => Self::build_use_mut_singleton_stmt(impl_fn_ident),
-            SingletonFnType::MutWithArg(arg) => Self::build_use_mut_singleton_with_arg_stmt(impl_fn_ident, arg),
+            SingletonFnType::MutWithArg(arg) => {
+                Self::build_use_mut_singleton_with_arg_stmt(impl_fn_ident, arg)
+            }
         };
         // replace the block with the new impl
         Self::replace_fn_block(
