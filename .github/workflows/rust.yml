@@ -79,6 +79,3 @@ jobs:
 
     - name: Run blockz example (singleton)
       run: make run VERBOSE=1 RUNFLAGS="--example singleton"
-
-    - name: Test (debug)
-      run: make test VERBOSE=1
