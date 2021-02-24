@@ -29,6 +29,6 @@ mod test {
     fn singleton_example() {
         let t = trybuild::TestCases::new();
 
-        t.pass("tests/ui/singleton.rs");
+        t.pass("examples/singleton.rs");
     }
 }

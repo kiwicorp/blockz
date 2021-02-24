@@ -68,14 +68,17 @@ jobs:
         path: target
         key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Build (debug)
-      run: make build VERBOSE=1
+    - name: Build blockz (debug)
+      run: make build VERBOSE=1 PKG=blockz
 
-    - name: Build (release)
-      run: make build VERBOSE=1 RELEASE=1
+    - name: Build blockz_derive (debug)
+      run: make build VERBOSE=1 PKG=blockz_derive
+
+    - name: Test blockz
+      run: make test VERBOSE=1 PKG=blockz
+
+    - name: Run blockz example (singleton)
+      run: make run VERBOSE=1 RUNFLAGS="--example singleton"
 
     - name: Test (debug)
       run: make test VERBOSE=1
-
-    - name: Test (release)
-      run: make test VERBOSE=1 RELEASE=1

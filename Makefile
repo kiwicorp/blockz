@@ -89,6 +89,15 @@ CFMT = cargo fmt \
 	$(TARGET_EXPANDED) \
 	$(FMTFLAGS)
 
+# Flags to be passed to cargo run.
+RUNFLAGS ?=
+# Cargo run.
+CRUN = cargo run \
+	$(VERBOSE_EXPANDED) \
+	$(RELEASE_EXPANDED) \
+	$(TARGET_EXPANDED) \
+	$(RUNFLAGS)
+
 # Flags to be passed to cargo test.
 TESTFLAGS ?=
 # Cargo test.
@@ -131,6 +140,10 @@ doc:
 fmt:
 	$(CFMT)
 .PHONY: fmt
+
+run:
+	$(CRUN)
+.PHONY: run
 
 test:
 	$(CTEST)
