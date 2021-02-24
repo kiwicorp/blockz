@@ -2,6 +2,8 @@
 
 mod derive_static;
 mod derive_trait;
+mod facade_fn;
+mod impl_fn;
 mod singleton_fns;
 
 use proc_macro2::TokenStream;
@@ -10,6 +12,40 @@ use quote::quote;
 
 use syn::DeriveInput;
 use syn::ItemFn;
+
+use std::convert::TryFrom;
+
+use self::facade_fn::FacadeFnFactory;
+use self::impl_fn::ImplFnFactory;
+use self::singleton_fns::SingletonFnType;
+
+/// A factory that builds singleton fns.
+pub(crate) struct SingletonFnFactory<'f> {
+    // the base function
+    base: &'f ItemFn,
+    // the function type that will be built by the factory
+    fn_type: SingletonFnType<'f>,
+}
+
+impl<'f> SingletonFnFactory<'f> {
+    /// Create a new singleton fn factory.
+    pub fn new(base: &'f ItemFn) -> syn::Result<Self> {
+        Ok(Self {
+            base,
+            fn_type: SingletonFnType::try_from(base)?,
+        })
+    }
+
+    /// Build the singleton fn facade and impl.
+    pub fn build(&self) -> syn::Result<TokenStream> {
+        let impl_fn = ImplFnFactory::new(self.base, &self.fn_type).build()?;
+        let facade_fn = FacadeFnFactory::new(self.base, &self.fn_type, &impl_fn).build()?;
+        Ok(quote! {
+            #facade_fn
+            #impl_fn
+        })
+    }
+}
 
 /// #[derive(Singleton)]
 pub(crate) fn derive_singleton(input: DeriveInput) -> TokenStream {
@@ -25,65 +61,5 @@ pub(crate) fn derive_singleton(input: DeriveInput) -> TokenStream {
     quote! {
         #singleton_static
         #impl_singleton
-    }
-}
-
-/// #[singleton_fn]
-pub(crate) fn singleton_fn(function: ItemFn) -> TokenStream {
-    // create base function
-    let base = &function;
-    // create impl fn
-    let impl_fn = singleton_fns::impl_singleton_fn(base);
-    // create facade fn
-    let facade_fn = singleton_fns::impl_singleton_fn_facade(base, &impl_fn);
-    // return impl
-    quote! {
-        #impl_fn
-        #facade_fn
-    }
-}
-
-/// #[singleton_fn_with_arg]
-pub(crate) fn singleton_fn_with_arg(function: ItemFn) -> TokenStream {
-    // create base function
-    let base = &function;
-    // create impl fn
-    let impl_fn = singleton_fns::impl_singleton_fn_with_arg(base);
-    // create facade fn
-    let facade_fn = singleton_fns::impl_singleton_fn_with_arg_facade(base, &impl_fn);
-    // return impl
-    quote! {
-        #impl_fn
-        #facade_fn
-    }
-}
-
-/// #[singleton_fn_mut]
-pub(crate) fn singleton_fn_mut(function: ItemFn) -> TokenStream {
-    // create base function
-    let base = &function;
-    // create impl fn
-    let impl_fn = singleton_fns::impl_singleton_fn_mut(base);
-    // create facade fn
-    let facade_fn = singleton_fns::impl_singleton_fn_mut_facade(base, &impl_fn);
-    // return impl
-    quote! {
-        #impl_fn
-        #facade_fn
-    }
-}
-
-/// #[singleton_fn_mut_with_arg]
-pub(crate) fn singleton_fn_mut_with_arg(function: ItemFn) -> TokenStream {
-    // create base function
-    let base = &function;
-    // create impl fn
-    let impl_fn = singleton_fns::impl_singleton_fn_mut_with_arg(base);
-    // create facade fn
-    let facade_fn = singleton_fns::impl_singleton_fn_mut_with_arg_facade(base, &impl_fn);
-    // return impl
-    quote! {
-        #impl_fn
-        #facade_fn
     }
 }
