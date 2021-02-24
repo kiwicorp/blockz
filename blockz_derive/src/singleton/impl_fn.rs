@@ -40,7 +40,7 @@ impl<'f> ImplFnFactory<'f> {
                 format_ident!("{}{}", SINGLETON_FN_WITH_ARG_PREFIX, target.sig.ident)
             }
             SingletonFnType::Mut { .. } => {
-                format_ident!("{}{}", SINGLETON_FN_PREFIX, target.sig.ident)
+                format_ident!("{}{}", SINGLETON_FN_MUT_PREFIX, target.sig.ident)
             }
             SingletonFnType::MutWithArg { .. } => {
                 format_ident!("{}{}", SINGLETON_FN_MUT_WITH_ARG_PREFIX, target.sig.ident)

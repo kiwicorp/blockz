@@ -97,10 +97,11 @@ impl<'f> FacadeFnFactory<'f> {
                 return Err(Error::new(
                     target.sig.ident.span(),
                     format!(
-                        "{}: {}: {}: {}",
+                        "{}: {}: {}: {}: {}",
                         "facade fn factory",
                         "replace fn block",
                         "failed to parse replacement block",
+                        e,
                         block,
                     ),
                 ));

@@ -22,9 +22,6 @@ use syn::TypeTuple;
 /// The name of the tuple argument for singleton fns.
 const SINGLETON_FN_TUPLE_ARG_NAME: &str = "args";
 
-/// Simplified type for function inputs (arguments).
-type FnInputs = Punctuated<FnArg, syn::token::Comma>;
-
 /// SingletonFn type.
 pub(super) enum SingletonFnType<'f> {
     NonMut,
