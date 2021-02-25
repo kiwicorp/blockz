@@ -77,24 +77,26 @@ impl<'f> ImplFnFactory<'f> {
     }
 
     /// Recursevly apply a replace legend to a token stream.
-    fn apply_replace_legend(stream: TokenStream, legend: &HashMap<String, TokenStream>) -> TokenStream {
-        stream.into_iter()
-            .map(|tt| {
-                match tt {
-                    TokenTree::Ident(ident) => {
-                        if let Some(value) = legend.get(ident.to_string().as_str()) {
-                            TokenTree::Group(Group::new(Delimiter::None, value.clone()))
-                        } else {
-                            TokenTree::Ident(ident)
-                        }
-                    },
-                    TokenTree::Group(group) => {
-                        let delim = group.delimiter();
-                        let tokens = Self::apply_replace_legend(group.stream(), legend);
-                        TokenTree::Group(Group::new(delim, tokens))
-                    },
-                    other => other,
+    fn apply_replace_legend(
+        stream: TokenStream,
+        legend: &HashMap<String, TokenStream>,
+    ) -> TokenStream {
+        stream
+            .into_iter()
+            .map(|tt| match tt {
+                TokenTree::Ident(ident) => {
+                    if let Some(value) = legend.get(ident.to_string().as_str()) {
+                        TokenTree::Group(Group::new(Delimiter::None, value.clone()))
+                    } else {
+                        TokenTree::Ident(ident)
+                    }
                 }
+                TokenTree::Group(group) => {
+                    let delim = group.delimiter();
+                    let tokens = Self::apply_replace_legend(group.stream(), legend);
+                    TokenTree::Group(Group::new(delim, tokens))
+                }
+                other => other,
             })
             .collect::<TokenStream>()
     }
@@ -122,43 +124,12 @@ impl<'f> ImplFnFactory<'f> {
         // unwrap the replace legend
         let replace_legend = replace_legend.unwrap();
 
-        // get the block
+        // get new the block
         let block = target.block.deref_mut();
-        *block = syn::parse2(Self::apply_replace_legend(quote! { #block }, &replace_legend))?;
-        // panic!("{}", quote! {#block});
-
-        // {
-        //     let mut block_str = format!("{}", quote! { #block });
-
-        //     // do the replacements
-        //     replace_legend.into_iter().for_each(|(from, to)| {
-        //         block_str = block_str.replace(from.as_str(), to.as_str());
-        //     });
-
-        //     *block = syn::parse_str(block_str.as_str())?;
-        // }
-
-        // block.stmts.iter_mut().for_each(|stmt| {
-        //     let mut stmt_str = format!("{}", quote! { #stmt });
-        //     replace_legend.iter().for_each(|arg| {
-        //         stmt_str = stmt_str
-        //             .split(' ')
-        //             .collect::<Vec<&str>>()
-        //             .into_iter()
-        //             .map(|val| {
-        //                 // if val == arg.0.as_str() {
-        //                 val.replace(arg.0.as_str(), arg.1.as_str())
-        //                 // } else {
-        //                 //     val.to_string()
-        //                 // }
-        //             })
-        //             .collect::<Vec<String>>()
-        //             .join(" ");
-        //     });
-        //     // panic!(stmt_str);
-        //     *stmt =
-        //         syn::parse_str(stmt_str.as_str()).expect(format!("{}", quote! { #stmt }).as_str());
-        // });
+        *block = syn::parse2(Self::apply_replace_legend(
+            quote! { #block },
+            &replace_legend,
+        ))?;
 
         Ok(())
     }

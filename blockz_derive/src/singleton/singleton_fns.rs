@@ -8,13 +8,12 @@ use proc_macro2::TokenStream;
 
 use quote::quote;
 
-use quote::format_ident;
-use syn::Index;
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::Error;
 use syn::FnArg;
 use syn::Ident;
+use syn::Index;
 use syn::ItemFn;
 use syn::Pat;
 use syn::PatType;
