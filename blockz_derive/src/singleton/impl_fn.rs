@@ -1,6 +1,12 @@
 //! Impl fn factory.
 
+use std::collections::HashMap;
 use std::ops::DerefMut;
+
+use proc_macro2::Delimiter;
+use proc_macro2::Group;
+use proc_macro2::TokenStream;
+use proc_macro2::TokenTree;
 
 use quote::format_ident;
 use quote::quote;
@@ -70,6 +76,29 @@ impl<'f> ImplFnFactory<'f> {
         Ok(())
     }
 
+    /// Recursevly apply a replace legend to a token stream.
+    fn apply_replace_legend(stream: TokenStream, legend: &HashMap<String, TokenStream>) -> TokenStream {
+        stream.into_iter()
+            .map(|tt| {
+                match tt {
+                    TokenTree::Ident(ident) => {
+                        if let Some(value) = legend.get(ident.to_string().as_str()) {
+                            TokenTree::Group(Group::new(Delimiter::None, value.clone()))
+                        } else {
+                            TokenTree::Ident(ident)
+                        }
+                    },
+                    TokenTree::Group(group) => {
+                        let delim = group.delimiter();
+                        let tokens = Self::apply_replace_legend(group.stream(), legend);
+                        TokenTree::Group(Group::new(delim, tokens))
+                    },
+                    other => other,
+                }
+            })
+            .collect::<TokenStream>()
+    }
+
     /// Fixes the block of a function, if necessary.
     fn fix_fn_block(&self, target: &mut ItemFn) -> syn::Result<()> {
         // create the replacement legend for fixing the impl fn block
@@ -95,17 +124,19 @@ impl<'f> ImplFnFactory<'f> {
 
         // get the block
         let block = target.block.deref_mut();
+        *block = syn::parse2(Self::apply_replace_legend(quote! { #block }, &replace_legend))?;
+        // panic!("{}", quote! {#block});
 
-        {
-            let mut block_str = format!("{}", quote! { #block });
+        // {
+        //     let mut block_str = format!("{}", quote! { #block });
 
-            // do the replacements
-            replace_legend.into_iter().for_each(|(from, to)| {
-                block_str = block_str.replace(from.as_str(), to.as_str());
-            });
+        //     // do the replacements
+        //     replace_legend.into_iter().for_each(|(from, to)| {
+        //         block_str = block_str.replace(from.as_str(), to.as_str());
+        //     });
 
-            *block = syn::parse_str(block_str.as_str())?;
-        }
+        //     *block = syn::parse_str(block_str.as_str())?;
+        // }
 
         // block.stmts.iter_mut().for_each(|stmt| {
         //     let mut stmt_str = format!("{}", quote! { #stmt });

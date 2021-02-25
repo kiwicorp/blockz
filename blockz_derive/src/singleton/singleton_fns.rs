@@ -1,5 +1,6 @@
 //! Singleton fns utilities.
 
+use std::collections::HashMap;
 use std::convert::TryFrom;
 
 use proc_macro2::Span;
@@ -7,6 +8,8 @@ use proc_macro2::TokenStream;
 
 use quote::quote;
 
+use quote::format_ident;
+use syn::Index;
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::Error;
@@ -94,7 +97,32 @@ impl<'f> SingletonFnArgs<'f> {
         }
     }
 
-    pub fn build_impl_fn_replacement_legend(&self) -> Option<Vec<(String, String)>> {
+    // pub fn build_impl_fn_replacement_legend(&self) -> Option<Vec<(String, String)>> {
+    //     match self {
+    //         SingletonFnArgs::Single { .. } => None,
+    //         SingletonFnArgs::Multiple {
+    //             arg_idents,
+    //             tuple_ident,
+    //             ..
+    //         } => {
+    //             let replacement_legend = arg_idents
+    //                 .iter()
+    //                 .enumerate()
+    //                 .map(|(index, arg)| {
+    //                     (
+    //                         // the name of the argument
+    //                         format!("{}", quote! {#arg}),
+    //                         // the tuple element replacement
+    //                         format!("{} . {}", quote! {#tuple_ident}, index),
+    //                     )
+    //                 })
+    //                 .collect::<Vec<(String, String)>>();
+    //             Some(replacement_legend)
+    //         }
+    //     }
+    // }
+
+    pub fn build_impl_fn_replacement_legend(&self) -> Option<HashMap<String, TokenStream>> {
         match self {
             SingletonFnArgs::Single { .. } => None,
             SingletonFnArgs::Multiple {
@@ -106,14 +134,15 @@ impl<'f> SingletonFnArgs<'f> {
                     .iter()
                     .enumerate()
                     .map(|(index, arg)| {
+                        let index = Index::from(index);
                         (
                             // the name of the argument
                             format!("{}", quote! {#arg}),
                             // the tuple element replacement
-                            format!("{} . {}", quote! {#tuple_ident}, index),
+                            quote! { #tuple_ident.#index },
                         )
                     })
-                    .collect::<Vec<(String, String)>>();
+                    .collect::<HashMap<String, TokenStream>>();
                 Some(replacement_legend)
             }
         }
