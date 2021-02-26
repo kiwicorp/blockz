@@ -13,6 +13,8 @@ use singleton::SingletonFnFactory;
 
 use proc_macro::TokenStream;
 
+use quote::quote;
+
 use syn::parse_macro_input;
 use syn::DeriveInput;
 use syn::ItemFn;
@@ -41,16 +43,21 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
     TokenStream::from(singleton::derive_singleton(input))
 }
 
+/// Modify a method on a type that implements the Singleton trait.
+///
+/// The modified method becomes a function that will use the underlying singleton.
+///
+/// Caveats: you may not name any function args as any other identifier found in it's
+/// implementation.
 #[cfg(feature = "singleton")]
 #[proc_macro_attribute]
 pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
-    TokenStream::from(
-        SingletonFnFactory::new(&input)
-            .expect("failed to build")
-            .build()
-            .expect("failed to build"),
-    )
+    SingletonFnFactory::new(&input)
+        .expect("failed to build")
+        .build()
+        .unwrap_or_else(to_compile_error)
+        .into()
 }
 
 /// Derive the Configuration trait.
@@ -75,4 +82,10 @@ pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
 pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     TokenStream::from(configuration::derive_configuration(input))
+}
+
+/// Map a syn error to a compile error.
+fn to_compile_error(error: syn::Error) -> proc_macro2::TokenStream {
+    let compile_error = error.to_compile_error();
+    quote!{ #compile_error }
 }
