@@ -24,7 +24,7 @@ impl Dummy {
     #[singleton_fn]
     pub async fn get_set(&mut self, get_index: usize, set: i32) -> anyhow::Result<Option<i32>> {
         let get_value = self.0.get(get_index).map(|val| *val);
-        if let Some(value) = get_value {
+        if let Some(_) = get_value {
             *self.0.get_mut(get_index).unwrap() = set;
             Ok(get_value)
         } else {
