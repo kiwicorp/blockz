@@ -87,5 +87,5 @@ pub fn derive_configuration(input: TokenStream) -> TokenStream {
 /// Map a syn error to a compile error.
 fn to_compile_error(error: syn::Error) -> proc_macro2::TokenStream {
     let compile_error = error.to_compile_error();
-    quote!{ #compile_error }
+    quote! { #compile_error }
 }
