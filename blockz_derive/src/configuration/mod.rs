@@ -9,6 +9,23 @@ use quote::quote;
 
 use syn::DeriveInput;
 
+/// A factory that builds implementations for the Configuration trait.
+pub(crate) struct ConfigurationFactory {}
+
+/// The source for a configuration.
+pub enum Source {
+    /// Environment variables.
+    Envy,
+    /// A JSON file.
+    Json,
+    /// A TOML file.
+    Toml,
+    /// A YAML file.
+    Yaml,
+    /// Variables from the AWS Parameter Store.
+    EnvyStore,
+}
+
 pub(crate) fn derive_configuration(input: DeriveInput) -> TokenStream {
     let type_name = &input.ident;
 
