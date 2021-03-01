@@ -10,7 +10,9 @@ use quote::quote;
 use syn::DeriveInput;
 
 /// A factory that builds implementations for the Configuration trait.
-pub(crate) struct ConfigurationFactory {}
+pub(crate) struct ConfigurationFactory<'f> {
+    input: &'f DeriveInput,
+}
 
 /// The source for a configuration.
 pub enum Source {
@@ -24,6 +26,20 @@ pub enum Source {
     Yaml,
     /// Variables from the AWS Parameter Store.
     EnvyStore,
+}
+
+impl<'f> ConfigurationFactory<'f> {
+    /// Create a new configuration factory.
+    pub fn new(input: &'f DeriveInput) -> Self {
+        Self {
+            input,
+        }
+    }
+
+    /// Build the configuration trait impl.
+    pub fn build(&self) -> syn::Result<TokenStream> {
+        Ok(quote! {})
+    }
 }
 
 pub(crate) fn derive_configuration(input: DeriveInput) -> TokenStream {
