@@ -96,31 +96,6 @@ impl<'f> SingletonFnArgs<'f> {
         }
     }
 
-    // pub fn build_impl_fn_replacement_legend(&self) -> Option<Vec<(String, String)>> {
-    //     match self {
-    //         SingletonFnArgs::Single { .. } => None,
-    //         SingletonFnArgs::Multiple {
-    //             arg_idents,
-    //             tuple_ident,
-    //             ..
-    //         } => {
-    //             let replacement_legend = arg_idents
-    //                 .iter()
-    //                 .enumerate()
-    //                 .map(|(index, arg)| {
-    //                     (
-    //                         // the name of the argument
-    //                         format!("{}", quote! {#arg}),
-    //                         // the tuple element replacement
-    //                         format!("{} . {}", quote! {#tuple_ident}, index),
-    //                     )
-    //                 })
-    //                 .collect::<Vec<(String, String)>>();
-    //             Some(replacement_legend)
-    //         }
-    //     }
-    // }
-
     pub fn build_impl_fn_replacement_legend(&self) -> Option<HashMap<String, TokenStream>> {
         match self {
             SingletonFnArgs::Single { .. } => None,
