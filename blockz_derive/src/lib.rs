@@ -9,6 +9,7 @@ mod singleton;
 mod common;
 mod paths;
 
+use singleton::SingletonFactory;
 use singleton::SingletonFnFactory;
 
 use proc_macro::TokenStream;
@@ -37,10 +38,13 @@ use syn::ItemFn;
 /// [once_cell]: https://docs.rs/once_cell
 /// [tokio]: https://docs.rs/tokio
 #[cfg(feature = "singleton")]
-#[proc_macro_derive(Singleton)]
+#[proc_macro_derive(Singleton, attributes(singleton))]
 pub fn derive_singleton(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    TokenStream::from(singleton::derive_singleton(input))
+    SingletonFactory::new(&input)
+        .build()
+        .unwrap_or_else(to_compile_error)
+        .into()
 }
 
 /// Modify a method on a type that implements the Singleton trait.
@@ -54,9 +58,10 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
 pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
     SingletonFnFactory::new(&input)
-        .expect("failed to build")
-        .build()
-        .unwrap_or_else(to_compile_error)
+        .map_or_else(
+            |err| to_compile_error(err),
+            |factory| factory.build().unwrap_or_else(to_compile_error),
+        )
         .into()
 }
 
