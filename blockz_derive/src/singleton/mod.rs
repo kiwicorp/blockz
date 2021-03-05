@@ -10,12 +10,15 @@ mod singleton_fns;
 use convert_case::Case;
 use convert_case::Casing;
 
+use darling::FromDeriveInput;
+
 use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 
 use quote::format_ident;
 use quote::quote;
 
+use syn::spanned::Spanned;
 use syn::DeriveInput;
 use syn::ItemFn;
 
@@ -25,6 +28,7 @@ use self::derive_static::SingletonStaticFactory;
 use self::derive_trait::SingletonTraitFactory;
 use self::facade_fn::FacadeFnFactory;
 use self::impl_fn::ImplFnFactory;
+use self::lock::SingletonLock;
 use self::singleton_fns::SingletonFnType;
 
 /// Prefix for the generated singleton static.
@@ -33,6 +37,14 @@ const SINGLETON_STATIC_PREFIX: &str = "BLOCKZ_SINGLETON_STATIC_";
 /// A factory that builds singletons.
 pub(crate) struct SingletonFactory<'i> {
     input: &'i DeriveInput,
+    opts: SingletonOpts,
+}
+
+#[derive(FromDeriveInput)]
+#[darling(attributes(singleton))]
+pub(crate) struct SingletonOpts {
+    #[darling(default)]
+    lock: SingletonLock,
 }
 
 /// A factory that builds singleton fns.
@@ -45,8 +57,12 @@ pub(crate) struct SingletonFnFactory<'f> {
 
 impl<'i> SingletonFactory<'i> {
     /// Create a new singleton factory.
-    pub fn new(input: &'i DeriveInput) -> Self {
-        Self { input }
+    pub fn new(input: &'i DeriveInput) -> syn::Result<Self> {
+        Ok(Self {
+            input,
+            opts: SingletonOpts::from_derive_input(input)
+                .map_err(|e| syn::Error::new(input.span(), format!("{}", e)))?,
+        })
     }
 
     /// Create the name of the static variable that holds the singleton.
@@ -60,9 +76,11 @@ impl<'i> SingletonFactory<'i> {
     pub fn build(&self) -> syn::Result<TokenStream> {
         let static_ident = Self::create_static_ident(&self.input.ident);
         let singleton_static =
-            SingletonStaticFactory::new(&static_ident, &self.input.ident).build()?;
+            SingletonStaticFactory::new(&static_ident, &self.input.ident, &self.opts.lock)
+                .build()?;
         let singleton_trait =
-            SingletonTraitFactory::new(&static_ident, &self.input.ident).build()?;
+            SingletonTraitFactory::new(&static_ident, &self.input.ident, &self.opts.lock)
+                .build()?;
         Ok(quote! {
             #singleton_static
             #singleton_trait

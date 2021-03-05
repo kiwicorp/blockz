@@ -42,8 +42,10 @@ use syn::ItemFn;
 pub fn derive_singleton(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     SingletonFactory::new(&input)
-        .build()
-        .unwrap_or_else(to_compile_error)
+        .map_or_else(
+            |err| to_compile_error(err),
+            |factory| factory.build().unwrap_or_else(to_compile_error),
+        )
         .into()
 }
 

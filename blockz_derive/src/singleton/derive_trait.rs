@@ -1,26 +1,31 @@
 //! Implement the singleton static.
 
-use crate::common;
-use crate::paths;
-
 use proc_macro2::TokenStream;
 
+use quote::format_ident;
 use quote::quote;
 
 use syn::Ident;
+
+use crate::common;
+use crate::paths;
+
+use super::lock::SingletonLock;
 
 /// Factory that builds a singleton trait implementation.
 pub(super) struct SingletonTraitFactory<'f> {
     static_ident: &'f Ident,
     type_name: &'f Ident,
+    lock: &'f SingletonLock,
 }
 
 impl<'f> SingletonTraitFactory<'f> {
     /// Create a new singleton trait factory.
-    pub fn new(static_ident: &'f Ident, type_name: &'f Ident) -> Self {
+    pub fn new(static_ident: &'f Ident, type_name: &'f Ident, lock: &'f SingletonLock) -> Self {
         Self {
             static_ident,
             type_name,
+            lock,
         }
     }
 
@@ -31,7 +36,6 @@ impl<'f> SingletonTraitFactory<'f> {
 
         // get paths to deps
         let anyhow = paths::anyhow_path();
-        let tokio = paths::tokio_path();
 
         // create lit str error message
         let err_msg =
@@ -40,12 +44,18 @@ impl<'f> SingletonTraitFactory<'f> {
         // create doc comment
         let doc = common::create_doc(format!("Initialize the singleton for {}.", type_name));
 
+        // create ident for the inner value var name
+        let inner_ident = format_ident!("inner");
+
+        // create new lock expression
+        let new_lock_expr = self.lock.to_new_lock_expr(&inner_ident);
+
         // return implementation
         quote! {
             #doc
             #[automatically_derived]
-            fn init_singleton(inner: Self::Inner) -> #anyhow::Result<()> {
-                if #static_ident.set(#tokio::sync::Mutex::new(inner)).is_err() {
+            fn init_singleton(#inner_ident: Self::Inner) -> #anyhow::Result<()> {
+                if #static_ident.set(#new_lock_expr).is_err() {
                     Err(anyhow::anyhow!(#err_msg))
                 } else {
                     Ok(())
@@ -69,6 +79,12 @@ impl<'f> SingletonTraitFactory<'f> {
             type_name
         ));
 
+        // create lock ident
+        let lock_ident = format_ident!("inner_lock");
+
+        // get lock guard expression
+        let lock_guard_expr = self.lock.to_guard(&lock_ident);
+
         // return implementation
         quote! {
             #doc
@@ -78,8 +94,9 @@ impl<'f> SingletonTraitFactory<'f> {
                 F: for<'c> #blockz::singleton::SingletonFn<'c, #type_name, R> + Send,
                 R: Send,
             {
-                let inner = #static_ident.get().unwrap().lock().await;
-                let inner_deref: &#type_name = &*inner;
+                let #lock_ident = #static_ident.get().unwrap();
+                let inner_guard = #lock_guard_expr;
+                let inner_deref: &#type_name = &*inner_guard;
                 clojure.call_once(inner_deref).await
             }
         }
@@ -100,6 +117,12 @@ impl<'f> SingletonTraitFactory<'f> {
             type_name
         ));
 
+        // create lock ident
+        let lock_ident = format_ident!("inner_lock");
+
+        // get mut lock guard expression
+        let mut_lock_guard_expr = self.lock.to_mut_guard(&lock_ident);
+
         // return implementation
         quote! {
             #doc
@@ -109,8 +132,9 @@ impl<'f> SingletonTraitFactory<'f> {
                 F: for<'c> #blockz::singleton::SingletonFnMut<'c, Self::Inner, R> + Send,
                 R: Send,
             {
-                let mut inner = #static_ident.get().unwrap().lock().await;
-                let inner_deref: &mut #type_name = &mut *inner;
+                let #lock_ident = #static_ident.get().unwrap();
+                let mut inner_guard = #mut_lock_guard_expr;
+                let inner_deref: &mut #type_name = &mut *inner_guard;
                 clojure.call_once(inner_deref).await
             }
         }
@@ -131,6 +155,12 @@ impl<'f> SingletonTraitFactory<'f> {
             type_name
         ));
 
+        // create lock ident
+        let lock_ident = format_ident!("inner_lock");
+
+        // get lock guard expression
+        let lock_guard_expr = self.lock.to_guard(&lock_ident);
+
         // return implementation
         quote! {
             #doc
@@ -141,8 +171,9 @@ impl<'f> SingletonTraitFactory<'f> {
                 A: Send,
                 R: Send
             {
-                let inner = #static_ident.get().unwrap().lock().await;
-                let inner_deref: &#type_name = &*inner;
+                let #lock_ident = #static_ident.get().unwrap();
+                let inner_guard = #lock_guard_expr;
+                let inner_deref: &#type_name = &*inner_guard;
                 clojure.call_once(inner_deref, arg).await
             }
         }
@@ -163,6 +194,12 @@ impl<'f> SingletonTraitFactory<'f> {
             type_name
         ));
 
+        // create lock ident
+        let lock_ident = format_ident!("inner_lock");
+
+        // get mut lock guard expression
+        let mut_lock_guard_expr = self.lock.to_mut_guard(&lock_ident);
+
         // return implementation
         quote! {
             #doc
@@ -173,8 +210,9 @@ impl<'f> SingletonTraitFactory<'f> {
                 A: Send,
                 R: Send
             {
-                let mut inner = #static_ident.get().unwrap().lock().await;
-                let inner_deref: &mut #type_name = &mut *inner;
+                let #lock_ident = #static_ident.get().unwrap();
+                let mut inner_guard = #mut_lock_guard_expr;
+                let inner_deref: &mut #type_name = &mut *inner_guard;
                 clojure.call_once(inner_deref, arg).await
             }
         }

@@ -7,6 +7,7 @@ use blockz::prelude::*;
 use std::sync::Arc;
 
 #[derive(Singleton)]
+#[singleton(lock = "rwlock")]
 struct Dummy(Vec<i32>);
 
 impl Dummy {
