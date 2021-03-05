@@ -31,9 +31,7 @@ pub enum Source {
 impl<'f> ConfigurationFactory<'f> {
     /// Create a new configuration factory.
     pub fn new(input: &'f DeriveInput) -> Self {
-        Self {
-            input,
-        }
+        Self { input }
     }
 
     /// Build the configuration trait impl.
