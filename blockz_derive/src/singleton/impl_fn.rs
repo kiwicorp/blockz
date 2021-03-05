@@ -11,7 +11,9 @@ use proc_macro2::TokenTree;
 use quote::format_ident;
 use quote::quote;
 
+use syn::Attribute;
 use syn::ItemFn;
+use syn::parse::Parser;
 
 use super::singleton_fns::SingletonFnType;
 
@@ -139,11 +141,31 @@ impl<'f> ImplFnFactory<'f> {
         target.vis = syn::Visibility::Inherited;
     }
 
+    /// Adds an #[automatically_derived] to the target function.
+    fn add_automatically_derived_attr(target: &mut ItemFn) -> syn::Result<()> {
+        let parser = Attribute::parse_outer;
+        let parsed_attrs = parser.parse2(quote! { #[automatically_derived] })?;
+        if parsed_attrs.len() != 1 {
+            panic!(
+                "{}: {}: {}: {}",
+                "impl fn factory",
+                "add inline always attr",
+                "expected to parse a single attribute",
+                "#[automatically_derived]"
+            );
+        }
+        let attr_inline = parsed_attrs.into_iter().take(1).next().unwrap();
+        target.attrs.push(attr_inline);
+        Ok(())
+    }
+
     pub fn build(&self) -> syn::Result<ItemFn> {
         // create the working copy
         let mut impl_fn = self.base.clone();
         // make the impl fn private
         Self::make_fn_private(&mut impl_fn);
+        // add #[automatically_derived]
+        Self::add_automatically_derived_attr(&mut impl_fn)?;
         // rename the function
         self.rename_fn(&mut impl_fn);
         // fix the fn args
