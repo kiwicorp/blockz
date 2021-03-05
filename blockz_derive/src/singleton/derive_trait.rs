@@ -70,7 +70,6 @@ impl<'f> SingletonTraitFactory<'f> {
         let type_name = self.type_name;
 
         // get paths to deps
-        let anyhow = paths::anyhow_path();
         let blockz = paths::blockz_path();
 
         // create doc comment
@@ -89,7 +88,7 @@ impl<'f> SingletonTraitFactory<'f> {
         quote! {
             #doc
             #[automatically_derived]
-            async fn use_singleton<F, R>(clojure: F) -> #anyhow::Result<R>
+            async fn use_singleton<F, R>(clojure: F) -> R
             where
                 F: for<'c> #blockz::singleton::SingletonFn<'c, #type_name, R> + Send,
                 R: Send,
@@ -108,7 +107,6 @@ impl<'f> SingletonTraitFactory<'f> {
         let type_name = self.type_name;
 
         // get paths to deps
-        let anyhow = paths::anyhow_path();
         let blockz = paths::blockz_path();
 
         // create doc comment
@@ -127,7 +125,7 @@ impl<'f> SingletonTraitFactory<'f> {
         quote! {
             #doc
             #[automatically_derived]
-            async fn use_mut_singleton<F, R>(clojure: F) -> #anyhow::Result<R>
+            async fn use_mut_singleton<F, R>(clojure: F) -> R
             where
                 F: for<'c> #blockz::singleton::SingletonFnMut<'c, Self::Inner, R> + Send,
                 R: Send,
@@ -146,7 +144,6 @@ impl<'f> SingletonTraitFactory<'f> {
         let type_name = self.type_name;
 
         // get paths to deps
-        let anyhow = paths::anyhow_path();
         let blockz = paths::blockz_path();
 
         // create doc comment
@@ -165,7 +162,7 @@ impl<'f> SingletonTraitFactory<'f> {
         quote! {
             #doc
             #[automatically_derived]
-            async fn use_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> #anyhow::Result<R>
+            async fn use_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> R
             where
                 F: for<'c> #blockz::singleton::SingletonFnWithArg<'c, Self::Inner, A, R> + Send,
                 A: Send,
@@ -185,7 +182,6 @@ impl<'f> SingletonTraitFactory<'f> {
         let type_name = self.type_name;
 
         // get paths to deps
-        let anyhow = paths::anyhow_path();
         let blockz = paths::blockz_path();
 
         // create doc comment
@@ -204,7 +200,7 @@ impl<'f> SingletonTraitFactory<'f> {
         quote! {
             #doc
             #[automatically_derived]
-            async fn use_mut_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> #anyhow::Result<R>
+            async fn use_mut_singleton_with_arg<F, A, R>(clojure: F, arg: A) -> R
             where
                 F: for<'c> #blockz::singleton::SingletonFnMutWithArg<'c, Self::Inner, A, R> + Send,
                 A: Send,
