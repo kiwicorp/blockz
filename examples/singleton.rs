@@ -12,30 +12,29 @@ struct DummyRwLock(Vec<i32>);
 
 impl DummyRwLock {
     #[singleton_fn]
-    pub async fn is_vec_empty(&self) -> anyhow::Result<bool> {
-        Ok(self.0.is_empty())
+    pub async fn is_vec_empty(&self) -> bool {
+        self.0.is_empty()
     }
 
     #[singleton_fn]
-    async fn clear(&mut self) -> anyhow::Result<()> {
+    async fn clear(&mut self) {
         self.0.clear();
-        Ok(())
     }
 
     #[singleton_fn]
-    pub async fn get_set(&mut self, get_index: usize, set: i32) -> anyhow::Result<Option<i32>> {
+    pub async fn get_set(&mut self, get_index: usize, set: i32) -> Option<i32> {
         let get_value = self.0.get(get_index).map(|val| *val);
         if let Some(_) = get_value {
             *self.0.get_mut(get_index).unwrap() = set;
-            Ok(get_value)
+            get_value
         } else {
-            Ok(None)
+            None
         }
     }
 
     #[singleton_fn]
-    pub async fn check_equals(&self, other: Arc<Vec<i32>>) -> anyhow::Result<bool> {
-        Ok(self.0.as_slice() == *other)
+    pub async fn check_equals(&self, other: Arc<Vec<i32>>) -> bool {
+        self.0.as_slice() == *other
     }
 }
 
@@ -45,30 +44,29 @@ struct DummyMutex(Vec<i32>);
 
 impl DummyMutex {
     #[singleton_fn]
-    pub async fn is_vec_empty(&self) -> anyhow::Result<bool> {
-        Ok(self.0.is_empty())
+    pub async fn is_vec_empty(&self) -> bool {
+        self.0.is_empty()
     }
 
     #[singleton_fn]
-    async fn clear(&mut self) -> anyhow::Result<()> {
+    async fn clear(&mut self) {
         self.0.clear();
-        Ok(())
     }
 
     #[singleton_fn]
-    pub async fn get_set(&mut self, get_index: usize, set: i32) -> anyhow::Result<Option<i32>> {
+    pub async fn get_set(&mut self, get_index: usize, set: i32) -> Option<i32> {
         let get_value = self.0.get(get_index).map(|val| *val);
         if let Some(_) = get_value {
             *self.0.get_mut(get_index).unwrap() = set;
-            Ok(get_value)
+            get_value
         } else {
-            Ok(None)
+            None
         }
     }
 
     #[singleton_fn]
-    pub async fn check_equals(&self, other: Arc<Vec<i32>>) -> anyhow::Result<bool> {
-        Ok(self.0.as_slice() == *other)
+    pub async fn check_equals(&self, other: Arc<Vec<i32>>) -> bool {
+        self.0.as_slice() == *other
     }
 }
 
@@ -78,77 +76,53 @@ pub async fn main() {
     DummyRwLock::init_singleton(DummyRwLock(vec![-5, 3])).unwrap();
 
     assert!(
-        !DummyMutex::is_vec_empty()
-            .await
-            .expect("Failed to check if vec is empty!"),
+        !DummyMutex::is_vec_empty().await,
         "DummyMutex should not have had an empty Vec!"
     );
     assert!(
-        !DummyRwLock::is_vec_empty()
-            .await
-            .expect("Failed to check if vec is empty!"),
+        !DummyRwLock::is_vec_empty().await,
         "DummyRwLock should not have had an empty Vec!"
     );
 
     let arr = Arc::new(vec![-5, 3]);
     assert!(
-        DummyMutex::check_equals(arr.clone())
-            .await
-            .expect("Failed to check if two vecs are equal"),
+        DummyMutex::check_equals(arr.clone()).await,
         "DummyMutex should have had a vec that is equal to [-5, 3]!"
     );
     assert!(
-        DummyRwLock::check_equals(arr.clone())
-            .await
-            .expect("Failed to check if two vecs are equal"),
+        DummyRwLock::check_equals(arr.clone()).await,
         "DummyRwLock should have had a vec that is equal to [-5, 3]!"
     );
 
-    let get = DummyMutex::get_set(2 as usize, 3 as i32)
-        .await
-        .expect("Failed to do DummyMutex::get_set");
+    let get = DummyMutex::get_set(2 as usize, 3 as i32).await;
     assert!(get.is_none());
-    let get = DummyRwLock::get_set(2 as usize, 3 as i32)
-        .await
-        .expect("Failed to do DummyRwLock::get_set");
+    let get = DummyRwLock::get_set(2 as usize, 3 as i32).await;
     assert!(get.is_none());
 
-    let get = DummyMutex::get_set(0 as usize, -4 as i32)
-        .await
-        .expect("Failed to do DummyMutex::get_set");
+    let get = DummyMutex::get_set(0 as usize, -4 as i32).await;
     assert_eq!(get, Some(-5));
-    let get = DummyRwLock::get_set(0 as usize, -4 as i32)
-        .await
-        .expect("Failed to do DummyRwLock::get_set");
+    let get = DummyRwLock::get_set(0 as usize, -4 as i32).await;
     assert_eq!(get, Some(-5));
 
     let arr = Arc::new(vec![-4, 3]);
     assert!(
-        DummyMutex::check_equals(arr.clone())
-            .await
-            .expect("Failed to check if two vecs are equal"),
+        DummyMutex::check_equals(arr.clone()).await,
         "DummyMutex should have had a vec that is equal to [-4, 3]!"
     );
     let arr = Arc::new(vec![-4, 3]);
     assert!(
-        DummyRwLock::check_equals(arr.clone())
-            .await
-            .expect("Failed to check if two vecs are equal"),
+        DummyRwLock::check_equals(arr.clone()).await,
         "DummyRwLock should have had a vec that is equal to [-4, 3]!"
     );
 
-    DummyMutex::clear().await.expect("Failed to clear DummyMutex!");
+    DummyMutex::clear().await;
     assert!(
-        DummyMutex::is_vec_empty()
-            .await
-            .expect("Failed to check if vec is empty!"),
+        DummyMutex::is_vec_empty().await,
         "DummyMutex should've had an empty Vec!"
     );
-    DummyRwLock::clear().await.expect("Failed to clear DummyRwLock!");
+    DummyRwLock::clear().await;
     assert!(
-        DummyRwLock::is_vec_empty()
-            .await
-            .expect("Failed to check if vec is empty!"),
+        DummyRwLock::is_vec_empty().await,
         "DummyRwLock should've had an empty Vec!"
     );
 }
