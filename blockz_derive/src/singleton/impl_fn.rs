@@ -11,9 +11,9 @@ use proc_macro2::TokenTree;
 use quote::format_ident;
 use quote::quote;
 
+use syn::parse::Parser;
 use syn::Attribute;
 use syn::ItemFn;
-use syn::parse::Parser;
 
 use super::singleton_fns::SingletonFnType;
 
