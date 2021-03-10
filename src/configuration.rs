@@ -10,6 +10,9 @@ pub trait Configuration {
     /// configuration.
     type Opts: Send;
 
+    /// The error type that can be produced while loading the configuration.
+    type Error: Send;
+
     /// Load the configuration.
-    async fn load(opts: Self::Opts) -> anyhow::Result<Self::Inner>;
+    async fn load(opts: Self::Opts) -> Result<Self::Inner, Self::Error>;
 }
