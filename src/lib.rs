@@ -11,6 +11,8 @@ pub mod singleton;
 pub mod prelude {
     #[cfg(feature = "configuration")]
     pub use crate::configuration::Configuration;
+    #[cfg(feature = "configuration")]
+    pub use crate::configuration::EasyConfiguration;
     pub use crate::derive::*;
     #[cfg(feature = "singleton")]
     pub use crate::singleton::Singleton;
