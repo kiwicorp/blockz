@@ -7,6 +7,7 @@ mod configuration;
 mod singleton;
 
 mod common;
+mod errors;
 mod paths;
 
 use singleton::SingletonFactory;
@@ -14,15 +15,18 @@ use singleton::SingletonFnFactory;
 
 use proc_macro::TokenStream;
 
-use quote::quote;
-
 use syn::parse_macro_input;
 use syn::DeriveInput;
 use syn::ItemFn;
 
+use self::configuration::ConfigurationFactory;
+
 /// Do not compile if `envy_configuration` is enabled, but `configuration` is not.
 #[cfg(all(feature = "envy_configuration", not(feature = "configuration")))]
 compile_error!("The `envy_configuration` feature requires the `configuration` feature.");
+
+/// Use the error trait of this crate.
+pub(crate) use self::errors::ProcMacroError;
 
 /// Derive the Singleton trait.
 ///
@@ -47,8 +51,12 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     SingletonFactory::new(&input)
         .map_or_else(
-            |err| to_compile_error(err),
-            |factory| factory.build().unwrap_or_else(to_compile_error),
+            |err| ProcMacroError::to_compile_errors(err),
+            |factory| {
+                factory
+                    .build()
+                    .unwrap_or_else(ProcMacroError::to_compile_errors)
+            },
         )
         .into()
 }
@@ -65,8 +73,12 @@ pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
     SingletonFnFactory::new(&input)
         .map_or_else(
-            |err| to_compile_error(err),
-            |factory| factory.build().unwrap_or_else(to_compile_error),
+            |err| ProcMacroError::to_compile_errors(err),
+            |factory| {
+                factory
+                    .build()
+                    .unwrap_or_else(ProcMacroError::to_compile_errors)
+            },
         )
         .into()
 }
@@ -92,11 +104,14 @@ pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
 #[cfg(feature = "configuration")]
 pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    TokenStream::from(configuration::derive_configuration(input))
-}
-
-/// Map a syn error to a compile error.
-fn to_compile_error(error: syn::Error) -> proc_macro2::TokenStream {
-    let compile_error = error.to_compile_error();
-    quote! { #compile_error }
+    ConfigurationFactory::new(&input)
+        .map_or_else(
+            |err| ProcMacroError::to_compile_errors(err),
+            |factory| {
+                factory
+                    .build()
+                    .unwrap_or_else(ProcMacroError::to_compile_errors)
+            },
+        )
+        .into()
 }
