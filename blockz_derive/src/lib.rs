@@ -88,7 +88,7 @@ pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
 /// [async_trait]: https://docs.rs/async_trait
 /// [blockz]: https://github.com/selftechio/blockz
 /// [config]: https://docs.rs/config
-#[proc_macro_derive(Configuration, attributes(config))]
+#[proc_macro_derive(Configuration, attributes(configuration))]
 #[cfg(feature = "configuration")]
 pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
