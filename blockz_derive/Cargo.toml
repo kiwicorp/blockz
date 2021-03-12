@@ -33,3 +33,8 @@ configuration = []
 
 # This feature makes blockz_derive not try to use paths starting with root(::examle::path).
 no_absolute_paths = []
+
+# Features
+
+# Enables deriving envy configurations.
+envy_configuration = []

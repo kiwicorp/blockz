@@ -18,6 +18,10 @@ pub mod prelude {
     pub use crate::singleton::Singleton;
 }
 
+/// Do not compile if `envy_configuration` is enabled, but `configuration` is not.
+#[cfg(all(feature = "envy_configuration", not(feature = "configuration")))]
+compile_error!("The `envy_configuration` feature requires the `configuration` feature.");
+
 /// Tests for the derive crate.
 ///
 /// These actually just try to compile the examples.

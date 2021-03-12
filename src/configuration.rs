@@ -35,7 +35,7 @@ pub trait EasyConfiguration {
 #[async_trait::async_trait]
 impl<C, I, O, E> EasyConfiguration for C
 where
-    C: Configuration<Inner=I, Opts=O, Error=E>,
+    C: Configuration<Inner = I, Opts = O, Error = E>,
     I: Send + 'static,
     O: Default + Send + 'static,
     E: Send + 'static,
@@ -47,3 +47,39 @@ where
         C::load(O::default()).await
     }
 }
+
+#[cfg(feature = "envy_configuration")]
+mod envy_configuration {
+    use super::Configuration;
+    use serde::Deserialize;
+    use std::marker::PhantomData;
+
+    /// Configuration that can be source via envy.
+    pub struct EnvyConfiguration<T>
+    where
+        T: for<'de> Deserialize<'de> + Send,
+    {
+        _phantom: PhantomData<T>,
+    }
+
+    #[cfg(feature = "envy_configuration")]
+    #[async_trait::async_trait]
+    impl<T> Configuration for EnvyConfiguration<T>
+    where
+        T: for<'de> Deserialize<'de> + Send,
+    {
+        type Inner = T;
+        type Opts = Option<String>;
+        type Error = envy::Error;
+
+        async fn load(opts: Self::Opts) -> Result<Self::Inner, Self::Error> {
+            if let Some(prefix) = opts {
+                Ok(envy::prefixed(prefix).from_env::<Self::Inner>()?)
+            } else {
+                Ok(envy::from_env::<Self::Inner>()?)
+            }
+        }
+    }
+}
+#[cfg(feature = "envy_configuration")]
+pub use envy_configuration::*;

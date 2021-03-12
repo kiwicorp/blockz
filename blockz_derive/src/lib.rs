@@ -20,6 +20,10 @@ use syn::parse_macro_input;
 use syn::DeriveInput;
 use syn::ItemFn;
 
+/// Do not compile if `envy_configuration` is enabled, but `configuration` is not.
+#[cfg(all(feature = "envy_configuration", not(feature = "configuration")))]
+compile_error!("The `envy_configuration` feature requires the `configuration` feature.");
+
 /// Derive the Singleton trait.
 ///
 /// This requires that the struct or enum is [Send].
