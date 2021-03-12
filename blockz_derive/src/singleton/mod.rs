@@ -18,7 +18,6 @@ use proc_macro2::TokenStream;
 use quote::format_ident;
 use quote::quote;
 
-use syn::spanned::Spanned;
 use syn::DeriveInput;
 use syn::ItemFn;
 
@@ -57,11 +56,10 @@ pub(crate) struct SingletonFnFactory<'f> {
 
 impl<'i> SingletonFactory<'i> {
     /// Create a new singleton factory.
-    pub fn new(input: &'i DeriveInput) -> syn::Result<Self> {
+    pub fn new(input: &'i DeriveInput) -> Result<Self, darling::Error> {
         Ok(Self {
             input,
-            opts: SingletonOpts::from_derive_input(input)
-                .map_err(|e| syn::Error::new(input.span(), format!("{}", e)))?,
+            opts: SingletonOpts::from_derive_input(input)?,
         })
     }
 
