@@ -79,3 +79,6 @@ jobs:
 
     - name: Run blockz example (singleton)
       run: make run VERBOSE=1 RUNFLAGS="--example singleton"
+
+    - name: Run blockz example (configuration)
+      run: PREFIX_SERVER_PORT=1111 SERVER_PORT=2222 make run VERBOSE=1 RUNFLAGS="--example configuration"
