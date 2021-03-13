@@ -54,7 +54,7 @@ mod envy_configuration {
     use serde::Deserialize;
     use std::marker::PhantomData;
 
-    /// Configuration that can be source via envy.
+    /// Configuration that can be sourced via envy.
     pub struct EnvyConfiguration<T>
     where
         T: for<'de> Deserialize<'de> + Send,
