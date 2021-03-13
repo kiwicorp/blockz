@@ -34,5 +34,6 @@ mod test {
         let t = trybuild::TestCases::new();
 
         t.pass("examples/singleton.rs");
+        t.pass("examples/configuration.rs");
     }
 }
