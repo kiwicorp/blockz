@@ -1,5 +1,7 @@
 //! Configurations.
 
+use std::marker::PhantomData;
+
 /// Common behaviour of configurations.
 #[async_trait::async_trait]
 pub trait Configuration {
@@ -45,6 +47,28 @@ where
 
     async fn load() -> Result<Self::Inner, Self::Error> {
         C::load(O::default()).await
+    }
+}
+
+/// Direct configuration that just returns the passed value.
+pub struct DirectConfiguration<T>
+where
+    T: Send
+{
+    _phantom: PhantomData<T>,
+}
+
+#[async_trait::async_trait]
+impl<T> Configuration for DirectConfiguration<T>
+where
+    T: Send
+{
+    type Inner = T;
+    type Opts = T;
+    type Error = ();
+
+    async fn load(opts: Self::Opts) -> Result<Self::Inner, Self::Error> {
+        Ok(opts)
     }
 }
 
