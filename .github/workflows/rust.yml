@@ -74,11 +74,8 @@ jobs:
     - name: Build blockz_derive (debug)
       run: make build VERBOSE=1 PKG=blockz_derive
 
-    - name: Test blockz
-      run: make test VERBOSE=1 PKG=blockz
+    - name: Test blockz (features = singleton)
+      run: make test VERBOSE=1 PKG=blockz TESTFLAGS="--no-default-features --features=singleton --example singleton"
 
-    - name: Run blockz example (singleton)
-      run: make run VERBOSE=1 RUNFLAGS="--example singleton"
-
-    - name: Run blockz example (configuration)
-      run: PREFIX_SERVER_PORT=1111 SERVER_PORT=2222 make run VERBOSE=1 RUNFLAGS="--example configuration"
+    - name: Test blockz (features = configuration, envy_configuration)
+      run: make test VERBOSE=1 PKG=blockz TESTFLAGS="--no-default-features --features=configuration --features=envy_configuration --example envy_configuration"
