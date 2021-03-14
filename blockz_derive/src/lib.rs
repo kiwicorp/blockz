@@ -51,7 +51,7 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     SingletonFactory::new(&input)
         .map_or_else(
-            |err| ProcMacroError::to_compile_errors(err),
+            ProcMacroError::to_compile_errors,
             |factory| {
                 factory
                     .build()
@@ -73,7 +73,7 @@ pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
     SingletonFnFactory::new(&input)
         .map_or_else(
-            |err| ProcMacroError::to_compile_errors(err),
+            ProcMacroError::to_compile_errors,
             |factory| {
                 factory
                     .build()
@@ -106,7 +106,7 @@ pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     ConfigurationFactory::new(&input)
         .map_or_else(
-            |err| ProcMacroError::to_compile_errors(err),
+            ProcMacroError::to_compile_errors,
             |factory| {
                 factory
                     .build()

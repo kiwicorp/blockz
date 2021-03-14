@@ -38,7 +38,7 @@ impl<'f> EnvyConfigurationFactory<'f> {
             <#blockz::configuration::EnvyConfiguration<#type_name> as #blockz::configuration::Configuration>::Opts
         };
 
-        if let Some(_) = &self.opts.prefix {
+        if self.opts.prefix.is_some() {
             quote! { () }
         } else {
             default_opts
