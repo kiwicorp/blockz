@@ -34,6 +34,15 @@ mod test {
         let t = trybuild::TestCases::new();
 
         t.pass("examples/singleton.rs");
-        t.pass("examples/configuration.rs");
+    }
+
+    /// Test the singleton example.
+    #[test]
+    #[cfg(all(feature = "configuration", feature = "envy_configuration"))]
+    fn envy_configuration_example() {
+        let t = trybuild::TestCases::new();
+
+        t.pass("examples/envy_configuration.rs");
+        t.compile_fail("examples/envy_configuration2.rs")
     }
 }
