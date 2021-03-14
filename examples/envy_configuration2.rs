@@ -1,4 +1,4 @@
-//! Configuration ui test.
+//! Envy configuration ui test.
 
 #![cfg(feature = "configuration")]
 
