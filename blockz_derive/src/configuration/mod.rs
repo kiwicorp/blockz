@@ -1,5 +1,7 @@
 //! #[derive(Configuration)].
 
+#[cfg(feature = "envy_configuration")]
+#[cfg_attr(docsrs, doc(cfg(feature = "envy_configuration")))]
 mod envy;
 
 use darling::FromDeriveInput;
@@ -8,7 +10,9 @@ use proc_macro2::TokenStream;
 
 use syn::DeriveInput;
 
+#[cfg(feature = "envy_configuration")]
 use self::envy::EnvyConfigurationFactory;
+#[cfg(feature = "envy_configuration")]
 use self::envy::EnvyConfigurationOpts;
 
 /// A factory that builds implementations for the Configuration trait.
@@ -20,6 +24,7 @@ pub(crate) struct ConfigurationFactory<'f> {
 #[derive(FromDeriveInput)]
 #[darling(attributes(configuration))]
 struct ConfigurationOpts {
+    #[cfg(feature = "envy_configuration")]
     #[darling(default)]
     envy: Option<EnvyConfigurationOpts>,
 }

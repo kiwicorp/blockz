@@ -1,9 +1,11 @@
 //! Blockz derive.
 
 #[cfg(feature = "configuration")]
+#[cfg_attr(docsrs, doc(cfg(feature = "configuration")))]
 mod configuration;
 
 #[cfg(feature = "singleton")]
+#[cfg_attr(docsrs, doc(cfg(feature = "singleton")))]
 mod singleton;
 
 mod common;
@@ -20,10 +22,6 @@ use syn::DeriveInput;
 use syn::ItemFn;
 
 use self::configuration::ConfigurationFactory;
-
-/// Do not compile if `envy_configuration` is enabled, but `configuration` is not.
-#[cfg(all(feature = "envy_configuration", not(feature = "configuration")))]
-compile_error!("The `envy_configuration` feature requires the `configuration` feature.");
 
 /// Use the error trait of this crate.
 pub(crate) use self::errors::ProcMacroError;
@@ -45,19 +43,17 @@ pub(crate) use self::errors::ProcMacroError;
 /// [blockz]: https://github.com/selftechio/blockz
 /// [once_cell]: https://docs.rs/once_cell
 /// [tokio]: https://docs.rs/tokio
-#[cfg(feature = "singleton")]
 #[proc_macro_derive(Singleton, attributes(singleton))]
+#[cfg(feature = "singleton")]
+#[cfg_attr(docsrs, doc(cfg(feature = "singleton")))]
 pub fn derive_singleton(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     SingletonFactory::new(&input)
-        .map_or_else(
-            ProcMacroError::to_compile_errors,
-            |factory| {
-                factory
-                    .build()
-                    .unwrap_or_else(ProcMacroError::to_compile_errors)
-            },
-        )
+        .map_or_else(ProcMacroError::to_compile_errors, |factory| {
+            factory
+                .build()
+                .unwrap_or_else(ProcMacroError::to_compile_errors)
+        })
         .into()
 }
 
@@ -67,19 +63,17 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
 ///
 /// Caveats: you may not name any function args as any other identifier found in it's
 /// implementation.
-#[cfg(feature = "singleton")]
 #[proc_macro_attribute]
+#[cfg(feature = "singleton")]
+#[cfg_attr(docsrs, doc(cfg(feature = "singleton")))]
 pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
     SingletonFnFactory::new(&input)
-        .map_or_else(
-            ProcMacroError::to_compile_errors,
-            |factory| {
-                factory
-                    .build()
-                    .unwrap_or_else(ProcMacroError::to_compile_errors)
-            },
-        )
+        .map_or_else(ProcMacroError::to_compile_errors, |factory| {
+            factory
+                .build()
+                .unwrap_or_else(ProcMacroError::to_compile_errors)
+        })
         .into()
 }
 
@@ -102,16 +96,14 @@ pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
 /// [config]: https://docs.rs/config
 #[proc_macro_derive(Configuration, attributes(configuration))]
 #[cfg(feature = "configuration")]
+#[cfg_attr(docsrs, doc(cfg(feature = "configuration")))]
 pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     ConfigurationFactory::new(&input)
-        .map_or_else(
-            ProcMacroError::to_compile_errors,
-            |factory| {
-                factory
-                    .build()
-                    .unwrap_or_else(ProcMacroError::to_compile_errors)
-            },
-        )
+        .map_or_else(ProcMacroError::to_compile_errors, |factory| {
+            factory
+                .build()
+                .unwrap_or_else(ProcMacroError::to_compile_errors)
+        })
         .into()
 }

@@ -37,4 +37,4 @@ no_absolute_paths = []
 # Features
 
 # Enables deriving envy configurations.
-envy_configuration = []
+envy_configuration = ["configuration"]
