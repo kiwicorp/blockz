@@ -1,5 +1,6 @@
 //! Configurations.
 
+#[cfg(feature = "envy_configuration")]
 use serde::Deserialize;
 
 use std::future::Future;
