@@ -1,0 +1,11 @@
+error: function argument #1 (type: usize) does not have an identifier
+  --> $DIR/singleton-f-3.rs:22:37
+   |
+22 |     pub async fn get_set(&mut self, _: usize, _: i32) -> Option<i32> {
+   |                                     ^
+
+error: function argument #1 (type: Box<[i32]>) does not have an identifier
+  --> $DIR/singleton-f-3.rs:27:38
+   |
+27 |     pub async fn check_equals(&self, _: Box<[i32]>) -> bool {
+   |                                      ^

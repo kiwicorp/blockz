@@ -32,13 +32,38 @@ pub mod prelude {
 /// These actually just try to compile the examples.
 #[cfg(test)]
 mod test {
+    macro_rules! ui_tests {
+        ($t: ident, pass, $feat: literal, [$( $index:literal ),*]) => {
+            $(
+                $t.pass(format!("tests/ui/{}-p-{}.rs", $feat, $index));
+            )*
+        };
+        ($t: ident, fail, $feat: literal, [$( $index:literal ),*]) => {
+            $(
+                $t.pass(format!("tests/ui/{}-f-{}.rs", $feat, $index));
+            )*
+        };
+    }
+
+    // macro_rules! ui_test {
+    //     (pass: [$($feat_pass: literal [$( $index_feat_pass:literal ),*]);*], fail: [$($feat_fail: literal [$( $index_feat_fail:literal ),*]);*]) => {
+    //         let t = ::trybuild::TestCases::new();
+    //         $(
+    //             $(
+    //                 t.pass(format!("tests/ui/{}-p-{}.rs", $feat_pass, $index_feat_pass));
+    //             )*
+    //         )*
+    //     };
+    // }
+
     /// Test the `singleton` feature.
     #[test]
     #[cfg(feature = "singleton")]
-    fn test_feature_singleton() {
+    fn test_singleton() {
         let t = trybuild::TestCases::new();
 
-        t.pass("tests/ui/singleton_good.rs");
+        ui_tests!(t, pass, "singleton", [1, 2, 3]);
+        ui_tests!(t, fail, "singleton", [1, 2, 3]);
     }
 
     /// Test the `envy_configuration` feature.
@@ -47,6 +72,6 @@ mod test {
     fn envy_configuration_example() {
         let t = trybuild::TestCases::new();
 
-        t.pass("tests/ui/envy_configuration_good.rs");
+        ui_tests!(t, pass, "envy_configuration", [1, 2]);
     }
 }
