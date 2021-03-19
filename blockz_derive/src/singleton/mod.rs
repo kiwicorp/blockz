@@ -23,6 +23,8 @@ use syn::ItemFn;
 
 use std::convert::TryFrom;
 
+use crate::factory::Factory;
+
 use self::derive_static::SingletonStaticFactory;
 use self::derive_trait::SingletonTraitFactory;
 use self::facade_fn::FacadeFnFactory;
@@ -69,16 +71,19 @@ impl<'i> SingletonFactory<'i> {
         let type_name_upper = src.to_string().to_case(Case::UpperSnake);
         format_ident!("{}{}", SINGLETON_STATIC_PREFIX, type_name_upper)
     }
+}
+
+impl<'i> Factory for SingletonFactory<'i> {
+    type Product = syn::Result<TokenStream>;
 
     /// Build the Singleton implementation.
-    pub fn build(&self) -> syn::Result<TokenStream> {
+    fn build(self) -> Self::Product {
         let static_ident = Self::create_static_ident(&self.input.ident);
         let singleton_static =
             SingletonStaticFactory::new(&static_ident, &self.input.ident, &self.opts.lock)
                 .build()?;
         let singleton_trait =
-            SingletonTraitFactory::new(&static_ident, &self.input.ident, &self.opts.lock)
-                .build()?;
+            SingletonTraitFactory::new(&static_ident, &self.input.ident, &self.opts.lock).build();
         Ok(quote! {
             #singleton_static
             #singleton_trait
@@ -94,9 +99,13 @@ impl<'f> SingletonFnFactory<'f> {
             fn_type: SingletonFnType::try_from(base)?,
         })
     }
+}
+
+impl<'f> Factory for SingletonFnFactory<'f> {
+    type Product = syn::Result<TokenStream>;
 
     /// Build the singleton fn facade and impl.
-    pub fn build(self) -> syn::Result<TokenStream> {
+    fn build(self) -> Self::Product {
         let impl_fn = ImplFnFactory::new(self.base, &self.fn_type).build()?;
         let facade_fn = FacadeFnFactory::new(self.base, &self.fn_type, &impl_fn).build()?;
         Ok(quote! {

@@ -10,10 +10,8 @@ mod singleton;
 
 mod common;
 mod errors;
+mod factory;
 mod paths;
-
-use singleton::SingletonFactory;
-use singleton::SingletonFnFactory;
 
 use proc_macro::TokenStream;
 
@@ -22,9 +20,10 @@ use syn::DeriveInput;
 use syn::ItemFn;
 
 use self::configuration::ConfigurationFactory;
-
-/// Use the error trait of this crate.
-pub(crate) use self::errors::ProcMacroError;
+use self::errors::ProcMacroErrorExt;
+use self::factory::Factory;
+use self::singleton::SingletonFactory;
+use self::singleton::SingletonFnFactory;
 
 /// Derive the Singleton trait.
 ///
@@ -49,10 +48,10 @@ pub(crate) use self::errors::ProcMacroError;
 pub fn derive_singleton(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     SingletonFactory::new(&input)
-        .map_or_else(ProcMacroError::to_compile_errors, |factory| {
+        .map_or_else(ProcMacroErrorExt::to_compile_errors, |factory| {
             factory
                 .build()
-                .unwrap_or_else(ProcMacroError::to_compile_errors)
+                .unwrap_or_else(ProcMacroErrorExt::to_compile_errors)
         })
         .into()
 }
@@ -69,10 +68,10 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
 pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
     SingletonFnFactory::new(&input)
-        .map_or_else(ProcMacroError::to_compile_errors, |factory| {
+        .map_or_else(ProcMacroErrorExt::to_compile_errors, |factory| {
             factory
                 .build()
-                .unwrap_or_else(ProcMacroError::to_compile_errors)
+                .unwrap_or_else(ProcMacroErrorExt::to_compile_errors)
         })
         .into()
 }
@@ -100,10 +99,10 @@ pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
 pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     ConfigurationFactory::new(&input)
-        .map_or_else(ProcMacroError::to_compile_errors, |factory| {
+        .map_or_else(ProcMacroErrorExt::to_compile_errors, |factory| {
             factory
                 .build()
-                .unwrap_or_else(ProcMacroError::to_compile_errors)
+                .unwrap_or_else(ProcMacroErrorExt::to_compile_errors)
         })
         .into()
 }

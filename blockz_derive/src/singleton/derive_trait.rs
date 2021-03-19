@@ -8,6 +8,7 @@ use quote::quote;
 use syn::Ident;
 
 use crate::common;
+use crate::factory::Factory;
 use crate::paths;
 
 use super::lock::SingletonLock;
@@ -213,9 +214,13 @@ impl<'f> SingletonTraitFactory<'f> {
             }
         }
     }
+}
+
+impl<'f> Factory for SingletonTraitFactory<'f> {
+    type Product = TokenStream;
 
     /// Build the trait implementation.
-    pub fn build(self) -> syn::Result<TokenStream> {
+    fn build(self) -> Self::Product {
         // get paths to deps
         let blockz = paths::blockz_path();
 
@@ -228,7 +233,7 @@ impl<'f> SingletonTraitFactory<'f> {
 
         // return implementation
         let type_name = self.type_name;
-        Ok(quote! {
+        quote! {
             #[async_trait::async_trait]
             impl #blockz::singleton::Singleton for #type_name {
                 type Inner = #type_name;
@@ -238,6 +243,6 @@ impl<'f> SingletonTraitFactory<'f> {
                 #use_singleton_with_arg
                 #use_singleton_mut_with_arg
             }
-        })
+        }
     }
 }

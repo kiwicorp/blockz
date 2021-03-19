@@ -6,6 +6,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::common;
+use crate::factory::Factory;
 use crate::paths;
 
 use super::lock::SingletonLock;
@@ -26,9 +27,13 @@ impl<'f> SingletonStaticFactory<'f> {
             lock,
         }
     }
+}
+
+impl<'f> Factory for SingletonStaticFactory<'f> {
+    type Product = syn::Result<TokenStream>;
 
     /// Build the singleton static.
-    pub fn build(self) -> syn::Result<TokenStream> {
+    fn build(self) -> Self::Product {
         // get paths to deps
         let once_cell = paths::once_cell_path();
 

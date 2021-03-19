@@ -15,6 +15,8 @@ use syn::parse::Parser;
 use syn::Attribute;
 use syn::ItemFn;
 
+use crate::factory::Factory;
+
 use super::singleton_fns::SingletonFnType;
 
 /// Prefix for an impl fn used by a singleton fn.
@@ -158,8 +160,12 @@ impl<'f> ImplFnFactory<'f> {
         target.attrs.push(attr_inline);
         Ok(())
     }
+}
 
-    pub fn build(&self) -> syn::Result<ItemFn> {
+impl<'f> Factory for ImplFnFactory<'f> {
+    type Product = syn::Result<ItemFn>;
+
+    fn build(self) -> Self::Product {
         // create the working copy
         let mut impl_fn = self.base.clone();
         // make the impl fn private

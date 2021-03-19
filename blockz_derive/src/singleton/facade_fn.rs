@@ -1,5 +1,6 @@
 //! Facade fn factory.
 
+use crate::factory::Factory;
 use crate::paths;
 
 use super::singleton_fns::SingletonFnArgs;
@@ -183,9 +184,13 @@ impl<'f> FacadeFnFactory<'f> {
             },
         )
     }
+}
+
+impl<'f> Factory for FacadeFnFactory<'f> {
+    type Product = syn::Result<ItemFn>;
 
     /// Build the facade fn.
-    pub fn build(&self) -> Result<ItemFn> {
+    fn build(self) -> Self::Product {
         // create the working copy
         let mut facade_fn = self.base.clone();
         // remove the receiver
