@@ -40,7 +40,7 @@ mod test {
         };
         ($t: ident, fail, $feat: literal, [$( $index:literal ),*]) => {
             $(
-                $t.pass(format!("tests/ui/{}-f-{}.rs", $feat, $index));
+                $t.compile_fail(format!("tests/ui/{}-f-{}.rs", $feat, $index));
             )*
         };
     }
@@ -63,7 +63,7 @@ mod test {
         let t = trybuild::TestCases::new();
 
         ui_tests!(t, pass, "singleton", [1, 2, 3]);
-        ui_tests!(t, fail, "singleton", [1, 2, 3]);
+        ui_tests!(t, fail, "singleton", [1, 2, 3, 4]);
     }
 
     /// Test the `envy_configuration` feature.

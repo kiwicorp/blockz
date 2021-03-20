@@ -15,6 +15,9 @@ use self::envy::EnvyConfigurationFactory;
 #[cfg(feature = "envy_configuration")]
 use self::envy::EnvyConfigurationOpts;
 
+#[cfg(feature = "envy_configuration")]
+type DefaultFactory = EnvyConfigurationFactory;
+
 /// A factory that builds implementations for the Configuration trait.
 pub(crate) struct ConfigurationFactory<'f> {
     input: &'f DeriveInput,
@@ -40,18 +43,19 @@ impl<'f> ConfigurationFactory<'f> {
 
     /// Build the configuration trait impl.
     pub fn build(self) -> syn::Result<TokenStream> {
-        let tokens: TokenStream;
+        // let tokens: TokenStream;
 
-        if let Some(value) = self.opts.envy {
-            tokens = EnvyConfigurationFactory::new(&self.input.ident, &value).build();
-        } else {
-            // the default factory, as of right now only envy is supported
-            // fixme 12/03/21: fix default behaviour
-            tokens =
-                EnvyConfigurationFactory::new(&self.input.ident, &EnvyConfigurationOpts::default())
-                    .build();
-        }
+        // if let Some(value) = self.opts.envy {
+        //     tokens = EnvyConfigurationFactory::new(&self.input.ident, &value).build();
+        // } else {
+        //     // the default factory, as of right now only envy is supported
+        //     // fixme 12/03/21: fix default behaviour
+        //     tokens =
+        //         EnvyConfigurationFactory::new(&self.input.ident, &EnvyConfigurationOpts::default())
+        //             .build();
+        // }
 
-        Ok(tokens)
+        // Ok(tokens)
+        Ok(quote::quote! {})
     }
 }
