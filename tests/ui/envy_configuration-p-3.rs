@@ -1,4 +1,4 @@
-//! Envy configuration ui test #1 - default.
+//! Envy configuration ui test #3 - prefix source.
 
 #![cfg(feature = "envy_configuration")]
 
@@ -7,7 +7,12 @@ use blockz::prelude::*;
 
 use serde::Deserialize;
 
+async fn get_prefix() -> String {
+    "SOURCED_PREFIX_".into()
+}
+
 #[derive(Configuration, Deserialize, PartialEq)]
+#[configuration(envy(prefix_source = "get_prefix()"))]
 struct EnvConfig {
     server_port: u32,
 }
@@ -15,15 +20,9 @@ struct EnvConfig {
 #[tokio::main]
 async fn main() {
     // set the required env variables
-    std::env::set_var("SERVER_PORT", "1234");
-    std::env::set_var("MANUAL_PREFIX_SERVER_PORT", "5678");
+    std::env::set_var("SOURCED_PREFIX_SERVER_PORT", "1234");
 
     let conf1 = <EnvConfig as EasyConfiguration>::load().await.unwrap();
-    let conf2 = <EnvConfig as Configuration>::load(None).await.unwrap();
+    let conf2 = <EnvConfig as Configuration>::load(()).await.unwrap();
     assert!(conf1 == conf2);
-
-    let conf = <EnvConfig as Configuration>::load(Some("MANUAL_PREFIX_"))
-        .await
-        .unwrap();
-    assert!(conf.server_port == 5678 as u32);
 }

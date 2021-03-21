@@ -10,13 +10,13 @@ error: attempted to construct a singleton fn from function that has no inputs (m
 18 |     async fn clear() {
    |     ^^^^^
 
-error: first function argument _ (type: usize) is not a reference receiver (&self or &mut self)
+error: first function argument _ (type: usize) must be a reference receiver (&self or &mut self)
   --> $DIR/singleton-f-1.rs:23:26
    |
 23 |     pub async fn get_set(_: usize, _: i32) -> Option<i32> {
    |                          ^
 
-error: first function argument _ (type: Box<[i32]>) is not a reference receiver (&self or &mut self)
+error: first function argument _ (type: Box<[i32]>) must be a reference receiver (&self or &mut self)
   --> $DIR/singleton-f-1.rs:28:31
    |
 28 |     pub async fn check_equals(_: Box<[i32]>) -> bool {
