@@ -3,6 +3,8 @@
 #[cfg(feature = "envy_configuration")]
 use serde::Deserialize;
 
+#[cfg(feature = "envy_configuration")]
+use std::borrow::Cow;
 use std::future::Future;
 use std::marker::PhantomData;
 
@@ -107,22 +109,25 @@ where
 /// Configuration that can be sourced via envy.
 #[cfg(feature = "envy_configuration")]
 #[cfg_attr(docsrs, doc(cfg(feature = "envy_configuration")))]
-pub struct EnvyConfiguration<T>
+pub struct EnvyConfiguration<'a, S, T>
 where
     T: for<'de> Deserialize<'de> + Send,
+    S: Into<Cow<'a, str>>,
 {
-    _phantom: PhantomData<T>,
+    _phantom_t: PhantomData<T>,
+    _phantom_s: PhantomData<&'a S>,
 }
 
 #[cfg(feature = "envy_configuration")]
 #[cfg_attr(docsrs, doc(cfg(feature = "envy_configuration")))]
 #[async_trait::async_trait]
-impl<T> Configuration for EnvyConfiguration<T>
+impl<'a, S, T> Configuration for EnvyConfiguration<'a, S, T>
 where
     T: for<'de> Deserialize<'de> + Send,
+    S: Into<Cow<'a, str>> + Send,
 {
     type Inner = T;
-    type Opts = Option<String>;
+    type Opts = Option<S>;
     type Error = envy::Error;
 
     async fn load(opts: Self::Opts) -> Result<Self::Inner, Self::Error> {
