@@ -8,12 +8,16 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use crate::common;
+use crate::factory::ReusableFactory;
 use crate::paths;
 
+use super::ConfigurationOpts;
+use super::DynFactory;
+
 /// Factory that builds a Configuration implementation based on envy.
-pub(super) struct EnvyConfigurationFactory<'f> {
-    type_name: &'f Ident,
-    opts: &'f EnvyConfigurationOpts, // fixme 12/03/21: use the factory opts
+pub(super) struct EnvyConfigurationFactory {
+    type_name: Ident,
+    opts: EnvyConfigurationOpts, // fixme 12/03/21: use the factory opts
 }
 
 /// Configuration options for a configuration backed by envy.
@@ -23,17 +27,21 @@ pub(super) struct EnvyConfigurationOpts {
     prefix: Option<String>,
 }
 
-impl<'f> EnvyConfigurationFactory<'f> {
+impl EnvyConfigurationFactory {
     /// Create a new envy configuration factory.
-    pub fn new(type_name: &'f Ident, opts: &'f EnvyConfigurationOpts) -> Self {
-        Self { type_name, opts }
+    pub fn new_dyn(opts: &mut ConfigurationOpts) -> DynFactory {
+        let envy = opts.envy.take().unwrap_or_default();
+        Box::new(Self {
+            type_name: opts.ident.clone(),
+            opts: envy,
+        })
     }
 
     fn get_configuration_impl_opts(&self) -> TokenStream {
         // gather paths to dependencies
         let blockz = paths::blockz_path();
 
-        let type_name = self.type_name;
+        let type_name = &self.type_name;
         let default_opts = quote! {
             <#blockz::configuration::EnvyConfiguration<#type_name> as #blockz::configuration::Configuration>::Opts
         };
@@ -53,9 +61,13 @@ impl<'f> EnvyConfigurationFactory<'f> {
             quote! { opts }
         }
     }
+}
+
+impl ReusableFactory for EnvyConfigurationFactory {
+    type Product = TokenStream;
 
     /// Build the envy configuration trait implementation.
-    pub fn build(self) -> TokenStream {
+    fn build(&mut self) -> Self::Product {
         // gather paths to dependencies
         let blockz = paths::blockz_path();
 
@@ -63,8 +75,9 @@ impl<'f> EnvyConfigurationFactory<'f> {
         let load_arg = self.get_configuration_impl_load_arg();
 
         // return the implementation
-        let type_name = self.type_name;
+        let type_name = &self.type_name;
         quote! {
+            #[automatically_derived]
             #[async_trait::async_trait]
             impl #blockz::configuration::Configuration for #type_name {
                 type Inner = #type_name;

@@ -100,9 +100,7 @@ pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     ConfigurationFactory::new(&input)
         .map_or_else(ProcMacroErrorExt::to_compile_errors, |factory| {
-            factory
-                .build()
-                .unwrap_or_else(ProcMacroErrorExt::to_compile_errors)
+            factory.build()
         })
         .into()
 }
