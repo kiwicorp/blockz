@@ -8,6 +8,7 @@ use blockz::prelude::*;
 use serde::Deserialize;
 
 #[derive(Configuration, Deserialize, PartialEq)]
+#[configuration(envy())]
 struct EnvConfig {
     server_port: u32,
 }
@@ -22,7 +23,7 @@ async fn main() {
     let conf2 = <EnvConfig as Configuration>::load(None).await.unwrap();
     assert!(conf1 == conf2);
 
-    let conf = <EnvConfig as Configuration>::load(Some("MANUAL_PREFIX_"))
+    let conf = <EnvConfig as Configuration>::load(Some("MANUAL_PREFIX_".into()))
         .await
         .unwrap();
     assert!(conf.server_port == 5678 as u32);
