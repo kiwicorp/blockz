@@ -20,11 +20,11 @@ pub(crate) trait ReusableFactory {
 
 impl<Rf> Factory for Rf
 where
-    Rf: ReusableFactory
+    Rf: ReusableFactory,
 {
     type Product = Rf::Product;
 
-    fn build(self) -> Self::Product {
+    fn build(mut self) -> Self::Product {
         <Rf as ReusableFactory>::build(&mut self)
     }
 }
