@@ -68,14 +68,14 @@ jobs:
         path: target
         key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Build blockz (debug)
-      run: make build VERBOSE=1 PKG=blockz
+    - name: Build (debug)
+      run: make build VERBOSE=1
 
-    - name: Build blockz_derive (debug)
-      run: make build VERBOSE=1 PKG=blockz_derive
+    - name: Test blockz (feature = singleton)
+      run: make test VERBOSE=1 PKG=blockz TESTFLAGS="--no-default-features --features=singleton"
 
-    - name: Test blockz (features = singleton)
-      run: make test VERBOSE=1 PKG=blockz TESTFLAGS="--no-default-features --features=singleton --example singleton"
+    - name: Test blockz (feature = configuration)
+      run: make test VERBOSE=1 PKG=blockz TESTFLAGS="--no-default-features --features=configuration"
 
-    - name: Test blockz (features = configuration, envy_configuration)
-      run: make test VERBOSE=1 PKG=blockz TESTFLAGS="--no-default-features --features=configuration --features=envy_configuration --example envy_configuration"
+    - name: Test blockz (feature = envy_configuration)
+      run: make test VERBOSE=1 PKG=blockz TESTFLAGS="--no-default-features --features=envy_configuration"
