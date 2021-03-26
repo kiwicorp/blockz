@@ -1,0 +1,5 @@
+error: Unknown field: `direc`. Did you mean `direct`?
+ --> $DIR/direct_configuration-f-1.rs:8:17
+  |
+8 | #[configuration(direc)]
+  |                 ^^^^^

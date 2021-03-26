@@ -2,7 +2,6 @@
 
 #![cfg(not(all(feature = "envy_configuration")))]
 
-use blockz::configuration::EasyConfiguration;
 use blockz::prelude::*;
 
 #[derive(Configuration, PartialEq)]
