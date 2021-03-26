@@ -2,10 +2,10 @@
 
 use darling::FromMeta;
 
-use proc_macro2::Ident;
 use proc_macro2::TokenStream;
 
 use quote::quote;
+use syn::DeriveInput;
 
 use crate::common;
 use crate::factory::ReusableFactory;
@@ -16,7 +16,7 @@ use super::DynFactory;
 
 /// Factory that builds a Configuration implementation based on envy.
 pub(super) struct EnvyConfigurationFactory {
-    type_name: Ident,
+    input: DeriveInput,
     opts: EnvyConfigurationOpts, // fixme 12/03/21: use the factory opts
 }
 
@@ -29,19 +29,16 @@ pub(super) struct EnvyConfigurationOpts {
 
 impl EnvyConfigurationFactory {
     /// Create a new envy configuration factory.
-    pub fn new_dyn(opts: &mut ConfigurationOpts) -> DynFactory {
+    pub fn new_dyn(input: DeriveInput, opts: &mut ConfigurationOpts) -> DynFactory {
         let envy = opts.envy.take().unwrap_or_default();
-        Box::new(Self {
-            type_name: opts.ident.clone(),
-            opts: envy,
-        })
+        Box::new(Self { input, opts: envy })
     }
 
     fn get_configuration_impl_opts(&self) -> TokenStream {
         // gather paths to dependencies
         let blockz = paths::blockz_path();
 
-        let type_name = &self.type_name;
+        let type_name = &self.input.ident;
         let default_opts = quote! {
             <#blockz::configuration::EnvyConfiguration<#type_name> as #blockz::configuration::Configuration>::Opts
         };
@@ -75,7 +72,7 @@ impl ReusableFactory for EnvyConfigurationFactory {
         let load_arg = self.get_configuration_impl_load_arg();
 
         // return the implementation
-        let type_name = &self.type_name;
+        let type_name = &self.input.ident;
         quote! {
             #[automatically_derived]
             #[async_trait::async_trait]

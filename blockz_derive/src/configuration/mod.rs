@@ -1,5 +1,6 @@
 //! #[derive(Configuration)].
 
+mod direct;
 #[cfg(feature = "envy_configuration")]
 #[cfg_attr(docsrs, doc(cfg(feature = "envy_configuration")))]
 mod envy;
@@ -9,15 +10,24 @@ use darling::FromDeriveInput;
 use proc_macro2::TokenStream;
 
 use syn::DeriveInput;
-use syn::Ident;
 
+use crate::factory::Factory;
 use crate::factory::ReusableFactory;
 
+use self::direct::DirectConfigurationFactory;
 #[cfg(feature = "envy_configuration")]
 use self::envy::EnvyConfigurationFactory;
 #[cfg(feature = "envy_configuration")]
 use self::envy::EnvyConfigurationOpts;
 
+/// A dynamic factory that produces a token stream.
+type DynFactory = Box<dyn ReusableFactory<Product = TokenStream>>;
+
+/// A function that creates a specialized factory.
+type FnNewDynFactory = Box<dyn FnOnce(DeriveInput, &mut ConfigurationOpts) -> DynFactory>;
+
+/// A macro that automatically builds the functions for selecting the dynamic factory used for
+/// producing the macro output.
 macro_rules! feature_factory {
     ($feature_name: literal, $function_name: ident, $opts_field: ident, $factory_new_dyn: path) => {
         #[cfg(not(feature = $feature_name))]
@@ -41,42 +51,35 @@ macro_rules! feature_factory {
     };
 }
 
-/// A dynamic factory that produces a token stream.
-type DynFactory = Box<dyn ReusableFactory<Product = TokenStream>>;
-
-/// A function that creates a specialized factory.
-type FnNewDynFactory = Box<dyn FnOnce(&mut ConfigurationOpts) -> DynFactory>;
-
 /// A factory that builds implementations for the Configuration trait.
 pub(crate) struct ConfigurationFactory {
+    input: DeriveInput,
     opts: ConfigurationOpts,
 }
 
 /// Options used by the configuration factory.
 #[derive(FromDeriveInput)]
-#[darling(from_ident, attributes(configuration))]
+#[darling(attributes(configuration))]
 struct ConfigurationOpts {
-    ident: Ident,
     #[cfg(feature = "envy_configuration")]
-    #[darling(default)]
+    #[cfg_attr(feature = "envy_configuration", darling(default))]
     envy: Option<EnvyConfigurationOpts>,
-}
-
-impl From<Ident> for ConfigurationOpts {
-    fn from(ident: Ident) -> Self {
-        Self {
-            ident,
-            envy: Option::default(),
-        }
-    }
+    #[darling(default)]
+    direct: bool,
 }
 
 impl ConfigurationFactory {
     /// Create a new configuration factory.
-    pub fn new(input: &DeriveInput) -> Result<Self, darling::Error> {
-        Ok(Self {
-            opts: ConfigurationOpts::from_derive_input(input)?,
-        })
+    pub fn new(input: DeriveInput) -> Result<Self, darling::Error> {
+        ConfigurationOpts::from_derive_input(&input).map(|opts| Self { input, opts })
+    }
+
+    fn direct_confiuration_factory(opts: &ConfigurationOpts) -> Option<FnNewDynFactory> {
+        if opts.direct {
+            Some(Box::new(DirectConfigurationFactory::new_dyn))
+        } else {
+            None
+        }
     }
 
     feature_factory!(
@@ -87,25 +90,25 @@ impl ConfigurationFactory {
     );
 
     fn pick_new_dyn_factory_fn(opts: Option<&ConfigurationOpts>) -> Option<FnNewDynFactory> {
-        Self::envy_configuration_factory(opts)
-            .or(None)
+        Self::envy_configuration_factory(opts).or_else(Option::default)
     }
 
     /// Returns a function that creates the new dynamic factory or None if the options did not
     /// specify a preference.
     fn get_new_dyn_factory_fn(&self) -> FnNewDynFactory {
         Self::pick_new_dyn_factory_fn(Some(&self.opts))
-            .or(Self::pick_new_dyn_factory_fn(None))
-            .unwrap() // should be unwrap_or(direct configuration)
+            .or_else(|| Self::direct_confiuration_factory(&self.opts))
+            .or_else(|| Self::pick_new_dyn_factory_fn(None))
+            .unwrap_or(Box::new(DirectConfigurationFactory::new_dyn))
     }
 }
 
-impl ReusableFactory for ConfigurationFactory {
+impl Factory for ConfigurationFactory {
     type Product = TokenStream;
 
-    fn build(&mut self) -> Self::Product {
+    fn build(mut self) -> Self::Product {
         let factory_builder: FnNewDynFactory = self.get_new_dyn_factory_fn();
-        let mut factory = factory_builder(&mut self.opts);
+        let mut factory = factory_builder(self.input, &mut self.opts);
         factory.build()
     }
 }

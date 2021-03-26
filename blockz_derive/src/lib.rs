@@ -98,7 +98,7 @@ pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
 #[cfg_attr(docsrs, doc(cfg(feature = "configuration")))]
 pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    ConfigurationFactory::new(&input)
+    ConfigurationFactory::new(input)
         .map_or_else(ProcMacroErrorExt::to_compile_errors, |factory| {
             factory.build()
         })
