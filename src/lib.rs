@@ -82,6 +82,6 @@ mod test {
     fn envy_configuration_example() {
         let t = trybuild::TestCases::new();
 
-        ui_tests!(t, pass, "envy_configuration", [1, 2]);
+        ui_tests!(t, pass, "envy_configuration", [1, 2, 3, 4]);
     }
 }

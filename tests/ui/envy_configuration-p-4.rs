@@ -1,4 +1,4 @@
-//! Envy configuration ui test #1 - default opts.
+//! Envy configuration ui test #4 - default configuration.
 
 #![cfg(feature = "envy_configuration")]
 
@@ -8,7 +8,6 @@ use blockz::prelude::*;
 use serde::Deserialize;
 
 #[derive(Configuration, Deserialize, PartialEq)]
-#[configuration(envy())]
 struct EnvConfig {
     server_port: u32,
 }
