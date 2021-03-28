@@ -19,7 +19,7 @@ impl Dummy {
     }
 
     #[singleton_fn]
-    pub async fn get_set(&mut self, _: usize, _: i32) -> Option<i32> {
+    pub async fn get_set(&mut self, get: usize, _: i32) -> Option<i32> {
         panic!("This should not run!");
     }
 

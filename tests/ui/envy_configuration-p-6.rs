@@ -1,4 +1,4 @@
-//! Envy configuration ui test #4 - prefix source (constant).
+//! Envy configuration ui test #6 - prefix source (constant).
 
 #![cfg(feature = "envy_configuration")]
 
@@ -7,10 +7,12 @@ use blockz::prelude::*;
 
 use serde::Deserialize;
 
-const ENC_CONFIG_PREFIX: &str = "SOURCED_PREFIX_";
+fn get_prefix() -> Result<String, _> {
+    std::env::var("BLOCKZ_UI_TEST_ENV_PREFIX")
+}
 
 #[derive(Configuration, Deserialize, PartialEq)]
-#[configuration(envy(prefix_source = "self::ENV_CONFIG_PREFIX"))]
+#[configuration(envy(prefix_source = "self::get_prefix()?"))]
 struct EnvConfig {
     server_port: u32,
 }
@@ -18,6 +20,7 @@ struct EnvConfig {
 #[tokio::main]
 async fn main() {
     // set the required env variables
+    std::env::set_var("BLOCKZ_UI_TEST_ENV_PREFIX", "SOURCED_PREFIX_");
     std::env::set_var("SOURCED_PREFIX_SERVER_PORT", "1234");
 
     let conf1 = <EnvConfig as EasyConfiguration>::load().await.unwrap();
