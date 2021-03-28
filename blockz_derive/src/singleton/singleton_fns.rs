@@ -131,12 +131,11 @@ impl<'f> TryFrom<&'f ItemFn> for SingletonFnType<'f> {
         // singleton function
         if base.sig.inputs.is_empty() {
             return Err(syn::Error::new(
-                base.span(),
+                base.sig.ident.span(),
                 format!(
-                    "{} {} {}",
-                    "singleton fn: from item fn: attempted to construct",
-                    "singleton fn from fn that has no inputs (must have at",
-                    "least a receiver)",
+                    "{} {}",
+                    "attempted to construct a singleton fn from function that has no inputs",
+                    "(must have at least a reference receiver - &self or &mut self)",
                 ),
             ));
         }
@@ -245,13 +244,19 @@ impl<'f> TryFrom<&[&'f PatType]> for SingletonFnArgs<'f> {
 
 /// Get a fn argument as a receiver.
 fn fn_arg_as_receiver(src: &FnArg) -> syn::Result<&Receiver> {
-    if let FnArg::Receiver(value) = src {
-        Ok(value)
-    } else {
-        Err(Error::new(
+    match src {
+        FnArg::Receiver(value) => Ok(value),
+        FnArg::Typed(bad) => {
+            let pat = &bad.pat;
+            let ty = &bad.ty;
+            Err(Error::new(
             src.span(),
-            format!("function argument {:?} is not a receiver", src),
+            format!("first function argument {} (type: {}) must be a reference receiver (&self or &mut self)",
+                quote! { #pat },
+                quote! { #ty },
+                ),
         ))
+        }
     }
 }
 
