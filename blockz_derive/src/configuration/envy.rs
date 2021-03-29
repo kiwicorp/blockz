@@ -17,7 +17,7 @@ use super::DynFactory;
 /// Factory that builds a Configuration implementation based on envy.
 pub(super) struct EnvyConfigurationFactory {
     input: DeriveInput,
-    opts: EnvyConfigurationOpts, // fixme 12/03/21: use the factory opts
+    opts: EnvyConfigurationOpts,
 }
 
 /// Configuration options for a configuration backed by envy.
@@ -25,6 +25,8 @@ pub(super) struct EnvyConfigurationFactory {
 pub(super) struct EnvyConfigurationOpts {
     #[darling(default)]
     prefix: Option<String>,
+    #[darling(default)]
+    prefix_source: Option<String>,
 }
 
 impl EnvyConfigurationFactory {
