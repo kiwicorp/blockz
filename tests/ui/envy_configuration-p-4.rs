@@ -7,10 +7,10 @@ use blockz::prelude::*;
 
 use serde::Deserialize;
 
-const ENC_CONFIG_PREFIX: &str = "SOURCED_PREFIX_";
+const ENV_CONFIG_PREFIX: &str = "SOURCED_PREFIX_";
 
 #[derive(Configuration, Deserialize, PartialEq)]
-#[configuration(envy(prefix_source = "self::ENV_CONFIG_PREFIX"))]
+#[configuration(envy(prefix_source = "ENV_CONFIG_PREFIX.to_string()"))]
 struct EnvConfig {
     server_port: u32,
 }
