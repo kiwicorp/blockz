@@ -25,6 +25,22 @@ use self::factory::Factory;
 use self::singleton::SingletonFactory;
 use self::singleton::SingletonFnFactory;
 
+/// Use a factory to produce a token stream.
+macro_rules! factory {
+    ($new_factory_stmt: expr) => {
+        $new_factory_stmt
+            .map_or_else(
+                |mut err| err.as_compile_errors(),
+                |factory| {
+                    factory
+                        .build()
+                        .unwrap_or_else(|mut err| err.as_compile_errors())
+                },
+            )
+            .into()
+    };
+}
+
 /// Derive the Singleton trait.
 ///
 /// This requires that the struct or enum is [Send].
@@ -47,13 +63,7 @@ use self::singleton::SingletonFnFactory;
 #[cfg_attr(docsrs, doc(cfg(feature = "singleton")))]
 pub fn derive_singleton(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    SingletonFactory::new(&input)
-        .map_or_else(ProcMacroErrorExt::to_compile_errors, |factory| {
-            factory
-                .build()
-                .unwrap_or_else(ProcMacroErrorExt::to_compile_errors)
-        })
-        .into()
+    factory!(SingletonFactory::new(&input))
 }
 
 /// Modify a method on a type that implements the Singleton trait.
@@ -67,13 +77,7 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
 #[cfg_attr(docsrs, doc(cfg(feature = "singleton")))]
 pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
-    SingletonFnFactory::new(&input)
-        .map_or_else(ProcMacroErrorExt::to_compile_errors, |factory| {
-            factory
-                .build()
-                .unwrap_or_else(ProcMacroErrorExt::to_compile_errors)
-        })
-        .into()
+    factory!(SingletonFnFactory::new(&input))
 }
 
 /// Derive the Configuration trait.
@@ -98,9 +102,5 @@ pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
 #[cfg_attr(docsrs, doc(cfg(feature = "configuration")))]
 pub fn derive_configuration(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    ConfigurationFactory::new(input)
-        .map_or_else(ProcMacroErrorExt::to_compile_errors, |factory| {
-            factory.build()
-        })
-        .into()
+    factory!(ConfigurationFactory::new(input))
 }
