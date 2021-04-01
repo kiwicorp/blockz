@@ -17,13 +17,11 @@ impl ProcMacroErrorExt for syn::Error {
 }
 
 impl ProcMacroErrorExt for darling::Error {
-    // fixme 01/04/2021: replace unsafe code
-    // contribute to https://github.com/TedDriggs/darling to add a way of writing errors, either add
-    // a #[derive(Clone)] or change function to use a (mutable) reference instead
-    #[allow(invalid_value)]
+    /// This renders the error as unusable!
     fn as_compile_errors(&mut self) -> TokenStream {
-        let err_cloned: darling::Error = mem::replace(self, unsafe { mem::zeroed() });
-        err_cloned.write_errors()
+        // replace the original error with an empty one and consume the actual error
+        // this renders the old error as unusable!
+        mem::replace(self, darling::Error::custom("")).write_errors()
     }
 }
 
