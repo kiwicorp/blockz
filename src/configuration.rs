@@ -9,47 +9,39 @@ use std::marker::PhantomData;
 /// Common behaviour of configurations.
 #[async_trait::async_trait]
 pub trait Configuration {
-    /// The inner type of the configuration that can be loaded.
-    type Inner: Send;
-
     /// The type of options container this Configuration accepts for the purpose of loading the
     /// configuration.
     type Opts: Send;
 
-    /// The error type that can be produced while loading the configuration.
-    type Error: Send;
+    /// The result type that can be produced by loading the configuration.
+    type Result: Send;
 
     /// Load the configuration.
-    async fn load(opts: Self::Opts) -> Result<Self::Inner, Self::Error>;
+    async fn load(opts: Self::Opts) -> Self::Result;
 }
 
 /// An easy configuration is a configuration that can be loaded without other parameters.
 #[async_trait::async_trait]
 pub trait EasyConfiguration {
-    /// The inner type of the configuration that can be loaded.
-    type Inner: Send;
-
-    /// The error type that can be produced while loading the configuration.
-    type Error: Send;
+    /// The result type that can be produced by loading the configuration.
+    type Result: Send;
 
     /// Load the configuration.
-    async fn load() -> Result<Self::Inner, Self::Error>;
+    async fn load() -> Self::Result;
 }
 
 /// Automatically implement EasyConfiguration on Configuration implementations whose Opts type is
 /// Default.
 #[async_trait::async_trait]
-impl<C, I, O, E> EasyConfiguration for C
+impl<C, O, R> EasyConfiguration for C
 where
-    C: Configuration<Inner = I, Opts = O, Error = E>,
-    I: Send + 'static,
+    C: Configuration<Opts = O, Result = R>,
     O: Default + Send + 'static,
-    E: Send + 'static,
+    R: Send + 'static,
 {
-    type Inner = I;
-    type Error = E;
+    type Result = R;
 
-    async fn load() -> Result<Self::Inner, Self::Error> {
+    async fn load() -> Self::Result {
         C::load(O::default()).await
     }
 }
@@ -95,12 +87,11 @@ impl<T> Configuration for DirectConfiguration<T>
 where
     T: Send,
 {
-    type Inner = T;
     type Opts = T;
-    type Error = ();
+    type Result = T;
 
-    async fn load(opts: Self::Opts) -> Result<Self::Inner, Self::Error> {
-        Ok(opts)
+    async fn load(opts: Self::Opts) -> Self::Result {
+        opts
     }
 }
 
@@ -121,15 +112,14 @@ impl<T> Configuration for EnvyConfiguration<T>
 where
     T: for<'de> Deserialize<'de> + Send,
 {
-    type Inner = T;
     type Opts = Option<String>;
-    type Error = envy::Error;
+    type Result = Result<T, envy::Error>;
 
-    async fn load(opts: Self::Opts) -> Result<Self::Inner, Self::Error> {
+    async fn load(opts: Self::Opts) -> Self::Result {
         if let Some(prefix) = opts {
-            Ok(envy::prefixed(prefix).from_env::<Self::Inner>()?)
+            envy::prefixed(prefix).from_env::<T>()
         } else {
-            Ok(envy::from_env::<Self::Inner>()?)
+            envy::from_env::<T>()
         }
     }
 }
