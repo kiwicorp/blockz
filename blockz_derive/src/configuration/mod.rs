@@ -13,6 +13,7 @@ use syn::DeriveInput;
 
 use crate::factory::Factory;
 use crate::factory::ReusableFactory;
+use crate::ProcMacroErrorExt;
 
 use self::direct::DirectConfigurationFactory;
 #[cfg(feature = "envy_configuration")]
@@ -20,8 +21,11 @@ use self::envy::EnvyConfigurationFactory;
 #[cfg(feature = "envy_configuration")]
 use self::envy::EnvyConfigurationOpts;
 
+/// A product produced by a dyn factory.
+type DynFactoryProduct = Result<TokenStream, Box<dyn ProcMacroErrorExt>>;
+
 /// A dynamic factory that produces a token stream.
-type DynFactory = Box<dyn ReusableFactory<Product = TokenStream>>;
+type DynFactory = Box<dyn ReusableFactory<Product = DynFactoryProduct>>;
 
 /// A function that creates a specialized factory.
 type FnNewDynFactory = Box<dyn FnOnce(DeriveInput, &mut ConfigurationOpts) -> DynFactory>;
@@ -30,22 +34,24 @@ type FnNewDynFactory = Box<dyn FnOnce(DeriveInput, &mut ConfigurationOpts) -> Dy
 /// producing the macro output.
 macro_rules! feature_factory {
     ($feature_name: literal, $function_name: ident, $opts_field: ident, $factory_new_dyn: path) => {
-        #[cfg(not(feature = $feature_name))]
-        fn $function_name(_: Option<&ConfigurationOpts>) -> Option<FnNewDynFactory> {
-            None
-        }
-
-        #[cfg(feature = $feature_name)]
+        #[allow(unused_variables)]
         fn $function_name(opts: Option<&ConfigurationOpts>) -> Option<FnNewDynFactory> {
-            let opts = if let Some(value) = opts {
-                value
-            } else {
-                return Some(Box::new($factory_new_dyn));
-            };
-            if opts.$opts_field.is_none() {
+            #[cfg(not(feature = $feature_name))]
+            {
                 None
-            } else {
-                Some(Box::new($factory_new_dyn))
+            }
+            #[cfg(feature = $feature_name)]
+            {
+                let opts = if let Some(value) = opts {
+                    value
+                } else {
+                    return Some(Box::new($factory_new_dyn));
+                };
+                if opts.$opts_field.is_none() {
+                    None
+                } else {
+                    Some(Box::new($factory_new_dyn))
+                }
             }
         }
     };
@@ -104,7 +110,7 @@ impl ConfigurationFactory {
 }
 
 impl Factory for ConfigurationFactory {
-    type Product = TokenStream;
+    type Product = DynFactoryProduct;
 
     fn build(mut self) -> Self::Product {
         let factory_builder: FnNewDynFactory = self.get_new_dyn_factory_fn();
