@@ -1,7 +1,5 @@
 //! Direct configuration factory.
 
-use proc_macro2::TokenStream;
-
 use quote::quote;
 
 use syn::DeriveInput;
@@ -11,6 +9,7 @@ use crate::paths;
 
 use super::ConfigurationOpts;
 use super::DynFactory;
+use super::DynFactoryProduct;
 
 /// Factory that builds a Configuration implementation based on DirectConfiguration.
 pub(super) struct DirectConfigurationFactory {
@@ -25,7 +24,7 @@ impl DirectConfigurationFactory {
 }
 
 impl ReusableFactory for DirectConfigurationFactory {
-    type Product = TokenStream;
+    type Product = DynFactoryProduct;
 
     fn build(&mut self) -> Self::Product {
         // gather paths to dependencies
@@ -33,18 +32,17 @@ impl ReusableFactory for DirectConfigurationFactory {
 
         // return the implementation
         let type_name = &self.input.ident;
-        quote! {
+        Ok(quote! {
             #[automatically_derived]
             #[async_trait::async_trait]
             impl #blockz::configuration::Configuration for #type_name {
-                type Inner = #type_name;
                 type Opts = #type_name;
-                type Error = <#blockz::configuration::DirectConfiguration<#type_name> as #blockz::configuration::Configuration>::Error;
+                type Result = <#blockz::configuration::DirectConfiguration<#type_name> as #blockz::configuration::Configuration>::Result;
 
-                async fn load(opts: Self::Opts) -> Result<Self::Inner, Self::Error> {
+                async fn load(opts: Self::Opts) -> Self::Result {
                     <#blockz::configuration::DirectConfiguration<#type_name> as #blockz::configuration::Configuration>::load(opts).await
                 }
             }
-        }
+        })
     }
 }
