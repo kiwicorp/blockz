@@ -20,7 +20,7 @@ impl Default for EnvConfig {
 #[tokio::main]
 async fn main() {
     let env_config = EnvConfig { server_port: 53812 };
-    let conf1 = <EnvConfig as EasyConfiguration>::load().await.unwrap();
-    let conf2 = <EnvConfig as Configuration>::load(env_config).await.unwrap();
+    let conf1 = <EnvConfig as EasyConfiguration>::load().await;
+    let conf2 = <EnvConfig as Configuration>::load(env_config).await;
     assert!(conf1 == conf2);
 }

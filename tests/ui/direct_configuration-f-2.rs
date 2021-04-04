@@ -13,6 +13,6 @@ struct EnvConfig {
 #[tokio::main]
 async fn main() {
     let env_config = EnvConfig { server_port: 53812 };
-    let conf1 = <EnvConfig as EasyConfiguration>::load().await.unwrap();
+    let conf1 = <EnvConfig as EasyConfiguration>::load().await;
     panic!("Execution should not arrive here!");
 }

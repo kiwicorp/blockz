@@ -7,8 +7,9 @@ use blockz::prelude::*;
 
 use serde::Deserialize;
 
-fn get_prefix() -> Result<String, _> {
+fn get_prefix() -> Result<String, envy::Error> {
     std::env::var("BLOCKZ_UI_TEST_ENV_PREFIX")
+        .map_err(|err| envy::Error::Custom(format!("{}", err)))
 }
 
 #[derive(Configuration, Deserialize, PartialEq)]

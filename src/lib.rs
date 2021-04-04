@@ -79,9 +79,9 @@ mod test {
     /// Test the `envy_configuration` feature.
     #[test]
     #[cfg(feature = "envy_configuration")]
-    fn envy_configuration_example() {
+    fn test_envy_configuration() {
         let t = trybuild::TestCases::new();
 
-        ui_tests!(t, pass, "envy_configuration", [1, 2, 3, 4]);
+        ui_tests!(t, pass, "envy_configuration", [1, 2, 3, 4, 5, 6, 7]);
     }
 }
