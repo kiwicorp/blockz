@@ -63,16 +63,12 @@ mod test {
         let t = trybuild::TestCases::new();
 
         ui_tests!(t, pass, "singleton", [1, 2, 3]);
-        ui_tests!(t, fail, "singleton", [1, 2, 3, 4]);
+        ui_tests!(t, fail, "singleton", [1, 2, 3]);
     }
 
     /// Test the direct configuration.
     #[test]
-    #[cfg(all(
-        feature = "configuration",
-        not(any(
-            feature = "env_configuration",
-        ))))]
+    #[cfg(all(feature = "configuration", not(any(feature = "env_configuration",))))]
     fn test_direct_configuration() {
         let t = trybuild::TestCases::new();
 
