@@ -1,6 +1,6 @@
 //! Configurations.
 
-#[cfg(feature = "envy_configuration")]
+#[cfg(feature = "env_configuration")]
 use serde::Deserialize;
 
 use std::future::Future;
@@ -95,20 +95,20 @@ where
     }
 }
 
-/// Configuration that can be sourced via envy.
-#[cfg(feature = "envy_configuration")]
-#[cfg_attr(docsrs, doc(cfg(feature = "envy_configuration")))]
-pub struct EnvyConfiguration<T>
+/// Configuration that can be sourced from environment variables.
+#[cfg(feature = "env_configuration")]
+#[cfg_attr(docsrs, doc(cfg(feature = "env_configuration")))]
+pub struct EnvConfiguration<T>
 where
     T: for<'de> Deserialize<'de> + Send,
 {
     _phantom_t: PhantomData<T>,
 }
 
-#[cfg(feature = "envy_configuration")]
-#[cfg_attr(docsrs, doc(cfg(feature = "envy_configuration")))]
+#[cfg(feature = "env_configuration")]
+#[cfg_attr(docsrs, doc(cfg(feature = "env_configuration")))]
 #[async_trait::async_trait]
-impl<T> Configuration for EnvyConfiguration<T>
+impl<T> Configuration for EnvConfiguration<T>
 where
     T: for<'de> Deserialize<'de> + Send,
 {

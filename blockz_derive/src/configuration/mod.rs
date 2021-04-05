@@ -1,9 +1,9 @@
 //! #[derive(Configuration)].
 
 mod direct;
-#[cfg(feature = "envy_configuration")]
-#[cfg_attr(docsrs, doc(cfg(feature = "envy_configuration")))]
-mod envy;
+#[cfg(feature = "env_configuration")]
+#[cfg_attr(docsrs, doc(cfg(feature = "env_configuration")))]
+mod env;
 
 use darling::FromDeriveInput;
 
@@ -16,10 +16,10 @@ use crate::factory::ReusableFactory;
 use crate::ProcMacroErrorExt;
 
 use self::direct::DirectConfigurationFactory;
-#[cfg(feature = "envy_configuration")]
-use self::envy::EnvyConfigurationFactory;
-#[cfg(feature = "envy_configuration")]
-use self::envy::EnvyConfigurationOpts;
+#[cfg(feature = "env_configuration")]
+use self::env::EnvConfigurationFactory;
+#[cfg(feature = "env_configuration")]
+use self::env::EnvConfigurationOpts;
 
 /// A product produced by a dyn factory.
 type DynFactoryProduct = Result<TokenStream, Box<dyn ProcMacroErrorExt>>;
@@ -67,9 +67,9 @@ pub(crate) struct ConfigurationFactory {
 #[derive(FromDeriveInput)]
 #[darling(attributes(configuration))]
 struct ConfigurationOpts {
-    #[cfg(feature = "envy_configuration")]
-    #[cfg_attr(feature = "envy_configuration", darling(default))]
-    envy: Option<EnvyConfigurationOpts>,
+    #[cfg(feature = "env_configuration")]
+    #[cfg_attr(feature = "env_configuration", darling(default))]
+    env: Option<EnvConfigurationOpts>,
     #[darling(default)]
     direct: bool,
 }
@@ -89,14 +89,14 @@ impl ConfigurationFactory {
     }
 
     feature_factory!(
-        "envy_configuration",
-        envy_configuration_factory,
-        envy,
-        EnvyConfigurationFactory::new_dyn
+        "env_configuration",
+        env_configuration_factory,
+        env,
+        EnvConfigurationFactory::new_dyn
     );
 
     fn pick_new_dyn_factory_fn(opts: Option<&ConfigurationOpts>) -> Option<FnNewDynFactory> {
-        Self::envy_configuration_factory(opts).or_else(Option::default)
+        Self::env_configuration_factory(opts).or_else(Option::default)
     }
 
     /// Returns a function that creates the new dynamic factory or None if the options did not

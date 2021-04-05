@@ -45,7 +45,7 @@ features = ["full"]
 [features]
 default = ["configuration", "singleton"]
 
-all = ["singleton", "configuration", "envy_configuration"]
+all = ["singleton", "configuration", "env_configuration"]
 
 # Enables the singleton trait and singleton derives.
 singleton = ["blockz_derive/singleton"]
@@ -58,8 +58,8 @@ no_absolute_paths = ["blockz_derive/no_absolute_paths"]
 
 # Features
 
-# Enables sourcing configurations from envy.
-envy_configuration = ["configuration", "blockz_derive/envy_configuration", "envy", "serde"]
+# Enables sourcing configurations from the environment.
+env_configuration = ["configuration", "blockz_derive/env_configuration", "envy", "serde"]
 
 [package.metadata.docs.rs]
 all-features = true

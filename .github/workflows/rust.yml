@@ -77,5 +77,5 @@ jobs:
     - name: Test blockz (feature = configuration)
       run: make test VERBOSE=1 PKG=blockz TESTFLAGS="--no-default-features --features=configuration"
 
-    - name: Test blockz (feature = envy_configuration)
-      run: make test VERBOSE=1 PKG=blockz TESTFLAGS="--no-default-features --features=envy_configuration"
+    - name: Test blockz (feature = env_configuration)
+      run: make test VERBOSE=1 PKG=blockz TESTFLAGS="--no-default-features --features=env_configuration"

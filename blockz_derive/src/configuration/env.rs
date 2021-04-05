@@ -1,4 +1,4 @@
-//! Envy configuration factory.
+//! Env configuration factory.
 
 use darling::FromMeta;
 
@@ -19,25 +19,25 @@ use super::DynFactory;
 use super::DynFactoryProduct;
 
 /// Factory that builds a Configuration implementation based on envy.
-pub(super) struct EnvyConfigurationFactory {
+pub(super) struct EnvConfigurationFactory {
     input: DeriveInput,
-    opts: EnvyConfigurationOpts,
+    opts: EnvConfigurationOpts,
 }
 
 /// Configuration options for a configuration backed by envy.
 #[derive(Default, FromMeta)]
-pub(super) struct EnvyConfigurationOpts {
+pub(super) struct EnvConfigurationOpts {
     #[darling(default)]
     prefix: Option<String>,
     #[darling(default)]
     prefix_source: Option<String>,
 }
 
-impl EnvyConfigurationFactory {
+impl EnvConfigurationFactory {
     /// Create a new envy configuration factory.
     pub fn new_dyn(input: DeriveInput, opts: &mut ConfigurationOpts) -> DynFactory {
-        let envy = opts.envy.take().unwrap_or_default();
-        Box::new(Self { input, opts: envy })
+        let env = opts.env.take().unwrap_or_default();
+        Box::new(Self { input, opts: env })
     }
 
     fn get_configuration_impl_opts(&self) -> TokenStream {
@@ -46,7 +46,7 @@ impl EnvyConfigurationFactory {
 
         let type_name = &self.input.ident;
         let default_opts = quote! {
-            <#blockz::configuration::EnvyConfiguration<#type_name> as #blockz::configuration::Configuration>::Opts
+            <#blockz::configuration::EnvConfiguration<#type_name> as #blockz::configuration::Configuration>::Opts
         };
 
         if self.opts.prefix.is_some() || self.opts.prefix_source.is_some() {
@@ -70,7 +70,7 @@ impl EnvyConfigurationFactory {
     }
 }
 
-impl ReusableFactory for EnvyConfigurationFactory {
+impl ReusableFactory for EnvConfigurationFactory {
     type Product = DynFactoryProduct;
 
     /// Build the envy configuration trait implementation.
@@ -91,10 +91,10 @@ impl ReusableFactory for EnvyConfigurationFactory {
             #[async_trait::async_trait]
             impl #blockz::configuration::Configuration for #type_name {
                 type Opts = #opts;
-                type Result = <#blockz::configuration::EnvyConfiguration<#type_name> as #blockz::configuration::Configuration>::Result;
+                type Result = <#blockz::configuration::EnvConfiguration<#type_name> as #blockz::configuration::Configuration>::Result;
 
                 async fn load(opts: Self::Opts) -> Self::Result {
-                    <#blockz::configuration::EnvyConfiguration<#type_name> as #blockz::configuration::Configuration>::load(#load_arg).await
+                    <#blockz::configuration::EnvConfiguration<#type_name> as #blockz::configuration::Configuration>::load(#load_arg).await
                 }
             }
         })

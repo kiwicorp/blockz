@@ -68,7 +68,11 @@ mod test {
 
     /// Test the direct configuration.
     #[test]
-    #[cfg(all(feature = "configuration", not(all(feature = "envy_configuration"))))]
+    #[cfg(all(
+        feature = "configuration",
+        not(any(
+            feature = "env_configuration",
+        ))))]
     fn test_direct_configuration() {
         let t = trybuild::TestCases::new();
 
@@ -76,12 +80,12 @@ mod test {
         ui_tests!(t, fail, "direct_configuration", [1, 2]);
     }
 
-    /// Test the `envy_configuration` feature.
+    /// Test the `env_configuration` feature.
     #[test]
-    #[cfg(feature = "envy_configuration")]
+    #[cfg(feature = "env_configuration")]
     fn test_envy_configuration() {
         let t = trybuild::TestCases::new();
 
-        ui_tests!(t, pass, "envy_configuration", [1, 2, 3, 4, 5, 6, 7]);
+        ui_tests!(t, pass, "env_configuration", [1, 2, 3, 4, 5, 6, 7]);
     }
 }
