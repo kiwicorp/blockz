@@ -266,11 +266,11 @@ impl<'e> Display for SingletonFnError<'e> {
                     quote! { #pat },
                     quote! { #ty },
                 )
-            },
+            }
             FnArgNotTyped(_) => write!(f, "function argument is not typed"),
             PatTypeNoIdent(_) => {
                 write!(f, "function argument must have an identifier")
-            },
+            }
         }
     }
 }
@@ -299,9 +299,7 @@ impl<'e> Into<Error> for SingletonFnError<'e> {
 fn fn_arg_as_receiver(src: &FnArg) -> syn::Result<&Receiver> {
     match src {
         FnArg::Receiver(value) => Ok(value),
-        FnArg::Typed(bad) => {
-            Err(SingletonFnError::FnArgNotReceiver(bad).into())
-        }
+        FnArg::Typed(bad) => Err(SingletonFnError::FnArgNotReceiver(bad).into()),
     }
 }
 
