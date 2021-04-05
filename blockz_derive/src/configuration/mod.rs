@@ -105,7 +105,7 @@ impl ConfigurationFactory {
         Self::pick_new_dyn_factory_fn(Some(&self.opts))
             .or_else(|| Self::direct_confiuration_factory(&self.opts))
             .or_else(|| Self::pick_new_dyn_factory_fn(None))
-            .unwrap_or(Box::new(DirectConfigurationFactory::new_dyn))
+            .unwrap_or_else(|| Box::new(DirectConfigurationFactory::new_dyn))
     }
 }
 
