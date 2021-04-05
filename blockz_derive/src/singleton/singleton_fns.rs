@@ -2,6 +2,8 @@
 
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::fmt;
+use std::fmt::Display;
 
 use proc_macro2::Span;
 use proc_macro2::TokenStream;
@@ -23,6 +25,15 @@ use syn::TypeTuple;
 
 /// The name of the tuple argument for singleton fns.
 const SINGLETON_FN_TUPLE_ARG_NAME: &str = "args";
+
+/// Errors produced when attempting to build singleton fns.
+enum SingletonFnError<'e> {
+    FnHasNoInputs(&'e ItemFn),
+    FnReceiverNotRef(&'e Receiver),
+    FnArgNotReceiver(&'e PatType),
+    FnArgNotTyped(&'e FnArg),
+    PatTypeNoIdent(&'e PatType),
+}
 
 /// SingletonFn type.
 pub(super) enum SingletonFnType<'f> {
@@ -130,14 +141,7 @@ impl<'f> TryFrom<&'f ItemFn> for SingletonFnType<'f> {
         // a function must have at least one input (the receiver) to be a
         // singleton function
         if base.sig.inputs.is_empty() {
-            return Err(syn::Error::new(
-                base.sig.ident.span(),
-                format!(
-                    "{} {}",
-                    "attempted to construct a singleton fn from function that has no inputs",
-                    "(must have at least a reference receiver - &self or &mut self)",
-                ),
-            ));
+            return Err(SingletonFnError::FnHasNoInputs(base).into());
         }
 
         // get the receiver
@@ -148,7 +152,7 @@ impl<'f> TryFrom<&'f ItemFn> for SingletonFnType<'f> {
 
         // return an error if the receiver is not a reference
         if receiver.reference.is_none() {
-            return Err(syn::Error::new(base.span(), "singleton fn: from item fn: attempted to construct a singleton fn from a fn whose receiver is not a reference"));
+            return Err(SingletonFnError::FnReceiverNotRef(receiver).into());
         }
 
         // check whether the function has other args or not
@@ -242,20 +246,61 @@ impl<'f> TryFrom<&[&'f PatType]> for SingletonFnArgs<'f> {
     }
 }
 
+impl<'e> Display for SingletonFnError<'e> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use SingletonFnError::*;
+        match self {
+            FnHasNoInputs(_) => {
+                write!(f, "attempted to construct a singleton fn from function that has no inputs (must have at least a reference receiver - &self or &mut self)")
+            }
+            FnReceiverNotRef(_) => {
+                write!(
+                    f,
+                    "function receiver must be a reference receiver (&self or &mut self)"
+                )
+            }
+            FnArgNotReceiver(arg) => {
+                let pat = &arg.pat;
+                let ty = &arg.ty;
+                write!(f, "first function argument {} (type: {}) must be a reference receiver (&self or &mut self)",
+                    quote! { #pat },
+                    quote! { #ty },
+                )
+            },
+            FnArgNotTyped(_) => write!(f, "function argument is not typed"),
+            PatTypeNoIdent(_) => {
+                write!(f, "function argument must have an identifier")
+            },
+        }
+    }
+}
+
+impl<'e> Spanned for SingletonFnError<'e> {
+    fn span(&self) -> Span {
+        use SingletonFnError::*;
+        match self {
+            FnHasNoInputs(f) => f.sig.ident.span(),
+            FnReceiverNotRef(recv) => recv.span(),
+            FnArgNotReceiver(arg) => arg.span(),
+            FnArgNotTyped(arg) => arg.span(),
+            PatTypeNoIdent(pat_ty) => pat_ty.span(),
+        }
+    }
+}
+
+#[allow(clippy::from_over_into)]
+impl<'e> Into<Error> for SingletonFnError<'e> {
+    fn into(self) -> Error {
+        Error::new(self.span(), format!("{}", self))
+    }
+}
+
 /// Get a fn argument as a receiver.
 fn fn_arg_as_receiver(src: &FnArg) -> syn::Result<&Receiver> {
     match src {
         FnArg::Receiver(value) => Ok(value),
         FnArg::Typed(bad) => {
-            let pat = &bad.pat;
-            let ty = &bad.ty;
-            Err(Error::new(
-            src.span(),
-            format!("first function argument {} (type: {}) must be a reference receiver (&self or &mut self)",
-                quote! { #pat },
-                quote! { #ty },
-                ),
-        ))
+            Err(SingletonFnError::FnArgNotReceiver(bad).into())
         }
     }
 }
@@ -265,10 +310,7 @@ fn fn_arg_as_typed(src: &FnArg) -> syn::Result<&PatType> {
     if let FnArg::Typed(value) = src {
         Ok(value)
     } else {
-        Err(Error::new(
-            src.span(),
-            format!("function argument {:?} is not typed", src),
-        ))
+        Err(SingletonFnError::FnArgNotTyped(src).into())
     }
 }
 
@@ -277,9 +319,6 @@ fn pat_type_as_ident(src: &PatType) -> syn::Result<&Ident> {
     if let Pat::Ident(value) = &*src.pat {
         Ok(&value.ident)
     } else {
-        Err(Error::new(
-            src.span(),
-            format!("function argument {:?} does not have an ident", src),
-        ))
+        Err(SingletonFnError::PatTypeNoIdent(src).into())
     }
 }
