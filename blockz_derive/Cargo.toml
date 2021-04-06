@@ -34,6 +34,9 @@ configuration = []
 # This feature makes blockz_derive not try to use paths starting with root(::examle::path).
 no_absolute_paths = []
 
+# Report debugging-oriented errors instead.
+debug_macro_errors = []
+
 # Features
 
 # Enables deriving env configurations.

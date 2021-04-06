@@ -2,7 +2,9 @@
 
 use std::collections::HashMap;
 use std::convert::TryFrom;
+#[cfg(not(feature = "debug_macro_errors"))]
 use std::fmt;
+#[cfg(not(feature = "debug_macro_errors"))]
 use std::fmt::Display;
 
 use proc_macro2::Span;
@@ -27,6 +29,7 @@ use syn::TypeTuple;
 const SINGLETON_FN_TUPLE_ARG_NAME: &str = "args";
 
 /// Errors produced when attempting to build singleton fns.
+#[cfg_attr(feature = "debug_macro_errors", derive(Debug))]
 enum SingletonFnError<'e> {
     FnHasNoInputs(&'e ItemFn),
     FnReceiverNotRef(&'e Receiver),
@@ -246,6 +249,7 @@ impl<'f> TryFrom<&[&'f PatType]> for SingletonFnArgs<'f> {
     }
 }
 
+#[cfg(not(feature = "debug_macro_errors"))]
 impl<'e> Display for SingletonFnError<'e> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use SingletonFnError::*;
@@ -291,7 +295,16 @@ impl<'e> Spanned for SingletonFnError<'e> {
 #[allow(clippy::from_over_into)]
 impl<'e> Into<Error> for SingletonFnError<'e> {
     fn into(self) -> Error {
-        Error::new(self.span(), format!("{}", self))
+        let msg: String;
+        #[cfg(not(feature = "debug_macro_errors"))]
+        {
+            msg = format!("{}", self);
+        }
+        #[cfg(feature = "debug_macro_errors")]
+        {
+            msg = format!("{:#?}", self);
+        }
+        Error::new(self.span(), msg)
     }
 }
 
