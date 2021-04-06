@@ -1,21 +1,18 @@
-//! Direct configuration ui test #1 - typo.
+//! Direct configuration ui test #1 - no Default impl.
 
-// #![cfg(not(all(feature = "env_configuration")))]
-#![cfg(all(
-    feature = "configuration",
-    not(any(
-        feature = "env_configuration",
-    ))))]
+#![cfg(all(feature = "configuration", not(any(feature = "env_configuration"))))]
 
+use blockz::configuration::EasyConfiguration;
 use blockz::prelude::*;
 
 #[derive(Configuration, PartialEq)]
-#[configuration(direc)]
 struct MyConfig {
     server_port: u32,
 }
 
 #[tokio::main]
 async fn main() {
-    panic!("This should not run!");
+    let env_config = MyConfig { server_port: 53812 };
+    let conf1 = <MyConfig as EasyConfiguration>::load().await;
+    panic!("Execution should not arrive here!");
 }

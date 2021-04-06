@@ -72,8 +72,8 @@ mod test {
     fn test_direct_configuration() {
         let t = trybuild::TestCases::new();
 
-        ui_tests!(t, pass, "direct_configuration", [1, 2]);
-        ui_tests!(t, fail, "direct_configuration", [1, 2]);
+        ui_tests!(t, pass, "direct_configuration", [0, 1, 2]);
+        ui_tests!(t, fail, "direct_configuration", [0, 1]);
     }
 
     /// Test the `env_configuration` feature.
