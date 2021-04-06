@@ -62,7 +62,7 @@ mod test {
     fn test_singleton() {
         let t = trybuild::TestCases::new();
 
-        ui_tests!(t, pass, "singleton", [1, 2, 3]);
+        ui_tests!(t, pass, "singleton", [0, 1, 2]);
         ui_tests!(t, fail, "singleton", [0, 1, 2, 3, 4, 5, 6, 7, 8]);
     }
 
