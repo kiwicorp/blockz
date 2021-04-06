@@ -1,11 +1,11 @@
-//! Singleton test fail #2 - bad attribute macro args.
+//! Singleton test fail #2 - mistyped `lock` attribute value (mutex).
 
 #![cfg(feature = "singleton")]
 
 use blockz::prelude::*;
 
 #[derive(Singleton)]
-#[singleton(a = "mutex", b = "rwlock", c)]
+#[singleton(lock = "mootex")]
 struct Dummy(Vec<i32>);
 
 impl Dummy {

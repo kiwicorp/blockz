@@ -1,0 +1,23 @@
+error: function receiver must be a reference receiver (&self or &mut self)
+  --> $DIR/singleton-f-5.rs:12:31
+   |
+12 |     pub async fn is_vec_empty(self) -> bool {
+   |                               ^^^^
+
+error: function receiver must be a reference receiver (&self or &mut self)
+  --> $DIR/singleton-f-5.rs:17:20
+   |
+17 |     async fn clear(mut self) {
+   |                    ^^^
+
+error: function receiver must be a reference receiver (&self or &mut self)
+  --> $DIR/singleton-f-5.rs:22:26
+   |
+22 |     pub async fn get_set(mut self, get: usize, _: i32) -> Option<i32> {
+   |                          ^^^
+
+error: function receiver must be a reference receiver (&self or &mut self)
+  --> $DIR/singleton-f-5.rs:27:31
+   |
+27 |     pub async fn check_equals(self, other: Box<[i32]>) -> bool {
+   |                               ^^^^

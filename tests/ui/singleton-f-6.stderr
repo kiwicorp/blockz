@@ -1,0 +1,23 @@
+error: first function argument recv (type: i32) must be a reference receiver (&self or &mut self)
+  --> $DIR/singleton-f-6.rs:12:31
+   |
+12 |     pub async fn is_vec_empty(recv: i32) -> bool {
+   |                               ^^^^
+
+error: first function argument bad_recv (type: u32) must be a reference receiver (&self or &mut self)
+  --> $DIR/singleton-f-6.rs:17:20
+   |
+17 |     async fn clear(bad_recv: u32) {
+   |                    ^^^^^^^^
+
+error: first function argument fail (type: String) must be a reference receiver (&self or &mut self)
+  --> $DIR/singleton-f-6.rs:22:26
+   |
+22 |     pub async fn get_set(fail: String) -> Option<i32> {
+   |                          ^^^^
+
+error: first function argument another_fail (type: Option < () >) must be a reference receiver (&self or &mut self)
+  --> $DIR/singleton-f-6.rs:27:31
+   |
+27 |     pub async fn check_equals(another_fail: Option<()>) -> bool {
+   |                               ^^^^^^^^^^^^

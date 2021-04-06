@@ -1,11 +1,12 @@
-//! Singleton test fail #1 - mistyped `lock` attribute.
+//! Singleton test fail #8 - function parameter is a reference
+//!
+//! The error message is pretty unpleasant.
 
 #![cfg(feature = "singleton")]
 
 use blockz::prelude::*;
 
 #[derive(Singleton)]
-#[singleton(lok = "mutex")]
 struct Dummy(Vec<i32>);
 
 impl Dummy {
@@ -20,12 +21,12 @@ impl Dummy {
     }
 
     #[singleton_fn]
-    pub async fn get_set(&mut self, get: usize, set: i32) -> Option<i32> {
+    pub async fn get_set(&mut self, get: &usize, set: &i32) -> Option<i32> {
         panic!("This should not run!");
     }
 
     #[singleton_fn]
-    pub async fn check_equals(&self, other: Box<[i32]>) -> bool {
+    pub async fn check_equals(&self, other: &[i32]) -> bool {
         panic!("This should not run!");
     }
 }

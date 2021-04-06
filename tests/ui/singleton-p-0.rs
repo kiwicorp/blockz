@@ -1,11 +1,10 @@
-//! Singleton test pass #3 - rw lock.
+//! Singleton test pass #1 - default lock and singleton fns.
 
 #![cfg(feature = "singleton")]
 
 use blockz::prelude::*;
 
 #[derive(Singleton)]
-#[singleton(lock = "rwlock")]
 struct Dummy(Vec<i32>);
 
 impl Dummy {

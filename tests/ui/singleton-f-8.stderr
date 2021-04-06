@@ -1,0 +1,41 @@
+error: implementation of `SingletonFnMutWithArg` is not general enough
+   --> $DIR/singleton-f-8.rs:23:5
+    |
+23  |       #[singleton_fn]
+    |       ^^^^^^^^^^^^^^^ implementation of `SingletonFnMutWithArg` is not general enough
+    |
+   ::: $WORKSPACE/src/singleton.rs
+    |
+    | / pub trait SingletonFnMutWithArg<'i, I, A, R>
+165 | | where
+166 | |     A: Send,
+167 | |     R: Send,
+...   |
+172 | |     fn call_once(self, inner: &'i mut I, arg: A) -> Self::SingletonResult;
+173 | | }
+    | |_- trait `SingletonFnMutWithArg` defined here
+    |
+    = note: `for<'_, '_, '_> fn(&mut Dummy, (&usize, &i32)) -> impl Future {Dummy::blockz_singleton_fn_mut_with_arg_get_set}` must implement `SingletonFnMutWithArg<'0, Dummy, (&usize, &i32), Option<i32>>`, for any lifetime `'0`...
+    = note: ...but `SingletonFnMutWithArg<'_, Dummy, (&usize, &i32), Option<i32>>` is actually implemented for the type `for<'_, '_, '_> fn(&mut Dummy, (&usize, &i32)) -> impl Future {Dummy::blockz_singleton_fn_mut_with_arg_get_set}`
+    = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: implementation of `SingletonFnWithArg` is not general enough
+   --> $DIR/singleton-f-8.rs:28:5
+    |
+28  |       #[singleton_fn]
+    |       ^^^^^^^^^^^^^^^ implementation of `SingletonFnWithArg` is not general enough
+    |
+   ::: $WORKSPACE/src/singleton.rs
+    |
+    | / pub trait SingletonFnWithArg<'i, I, A, R>
+93  | | where
+94  | |     A: Send,
+95  | |     R: Send,
+...   |
+100 | |     fn call_once(self, inner: &'i I, arg: A) -> Self::SingletonResult;
+101 | | }
+    | |_- trait `SingletonFnWithArg` defined here
+    |
+    = note: `for<'_, '_> fn(&Dummy, &[i32]) -> impl Future {Dummy::blockz_singleton_fn_with_arg_check_equals}` must implement `SingletonFnWithArg<'0, Dummy, &[i32], bool>`, for any lifetime `'0`...
+    = note: ...but `SingletonFnWithArg<'_, Dummy, &[i32], bool>` is actually implemented for the type `for<'_, '_> fn(&Dummy, &[i32]) -> impl Future {Dummy::blockz_singleton_fn_with_arg_check_equals}`
+    = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)

@@ -1,10 +1,11 @@
-//! Singleton test pass #1 - default lock.
+//! Singleton test pass #2 - mutex lock and singleton fns.
 
 #![cfg(feature = "singleton")]
 
 use blockz::prelude::*;
 
 #[derive(Singleton)]
+#[singleton(lock = "mutex")]
 struct Dummy(Vec<i32>);
 
 impl Dummy {

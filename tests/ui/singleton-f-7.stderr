@@ -1,0 +1,11 @@
+error: function argument must have an identifier
+  --> $DIR/singleton-f-7.rs:22:49
+   |
+22 |     pub async fn get_set(&mut self, get: usize, _: i32) -> Option<i32> {
+   |                                                 ^
+
+error: function argument must have an identifier
+  --> $DIR/singleton-f-7.rs:27:38
+   |
+27 |     pub async fn check_equals(&self, _: Box<[i32]>) -> bool {
+   |                                      ^

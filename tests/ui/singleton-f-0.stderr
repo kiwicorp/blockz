@@ -1,11 +1,23 @@
-error: Unknown literal value `rwlok`
- --> $DIR/singleton-f-3.rs:8:20
+error: Unknown field: `a`
+ --> $DIR/singleton-f-0.rs:8:13
   |
-8 | #[singleton(lock = "rwlok")]
-  |                    ^^^^^^^
+8 | #[singleton(a = "mutex", b = "rwlock", c)]
+  |             ^
+
+error: Unknown field: `b`
+ --> $DIR/singleton-f-0.rs:8:26
+  |
+8 | #[singleton(a = "mutex", b = "rwlock", c)]
+  |                          ^
+
+error: Unknown field: `c`
+ --> $DIR/singleton-f-0.rs:8:40
+  |
+8 | #[singleton(a = "mutex", b = "rwlock", c)]
+  |                                        ^
 
 error[E0599]: no function or associated item named `use_singleton` found for struct `Dummy` in the current scope
-  --> $DIR/singleton-f-3.rs:12:5
+  --> $DIR/singleton-f-0.rs:12:5
    |
 9  | struct Dummy(Vec<i32>);
    | ----------------------- function or associated item `use_singleton` not found for this
@@ -19,7 +31,7 @@ error[E0599]: no function or associated item named `use_singleton` found for str
    = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0599]: no function or associated item named `use_mut_singleton` found for struct `Dummy` in the current scope
-  --> $DIR/singleton-f-3.rs:17:5
+  --> $DIR/singleton-f-0.rs:17:5
    |
 9  | struct Dummy(Vec<i32>);
    | ----------------------- function or associated item `use_mut_singleton` not found for this
@@ -33,7 +45,7 @@ error[E0599]: no function or associated item named `use_mut_singleton` found for
    = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0599]: no function or associated item named `use_mut_singleton_with_arg` found for struct `Dummy` in the current scope
-  --> $DIR/singleton-f-3.rs:22:5
+  --> $DIR/singleton-f-0.rs:22:5
    |
 9  | struct Dummy(Vec<i32>);
    | ----------------------- function or associated item `use_mut_singleton_with_arg` not found for this
@@ -47,7 +59,7 @@ error[E0599]: no function or associated item named `use_mut_singleton_with_arg` 
    = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0599]: no function or associated item named `use_singleton_with_arg` found for struct `Dummy` in the current scope
-  --> $DIR/singleton-f-3.rs:27:5
+  --> $DIR/singleton-f-0.rs:27:5
    |
 9  | struct Dummy(Vec<i32>);
    | ----------------------- function or associated item `use_singleton_with_arg` not found for this

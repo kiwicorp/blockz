@@ -1,23 +1,61 @@
-error: attempted to construct a singleton fn from function that has no inputs (must have at least a reference receiver - &self or &mut self)
-  --> $DIR/singleton-f-1.rs:12:18
-   |
-12 |     pub async fn is_vec_empty() -> bool {
-   |                  ^^^^^^^^^^^^
+error: Unknown field: `lok`. Did you mean `lock`?
+ --> $DIR/singleton-f-1.rs:8:13
+  |
+8 | #[singleton(lok = "mutex")]
+  |             ^^^
 
-error: attempted to construct a singleton fn from function that has no inputs (must have at least a reference receiver - &self or &mut self)
-  --> $DIR/singleton-f-1.rs:17:14
+error[E0599]: no function or associated item named `use_singleton` found for struct `Dummy` in the current scope
+  --> $DIR/singleton-f-1.rs:12:5
    |
-17 |     async fn clear() {
-   |              ^^^^^
+9  | struct Dummy(Vec<i32>);
+   | ----------------------- function or associated item `use_singleton` not found for this
+...
+12 |     #[singleton_fn]
+   |     ^^^^^^^^^^^^^^^ function or associated item not found in `Dummy`
+   |
+   = help: items from traits can only be used if the trait is implemented and in scope
+   = note: the following trait defines an item `use_singleton`, perhaps you need to implement it:
+           candidate #1: `blockz::singleton::Singleton`
+   = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error: first function argument _ (type: usize) must be a reference receiver (&self or &mut self)
-  --> $DIR/singleton-f-1.rs:22:26
+error[E0599]: no function or associated item named `use_mut_singleton` found for struct `Dummy` in the current scope
+  --> $DIR/singleton-f-1.rs:17:5
    |
-22 |     pub async fn get_set(_: usize, _: i32) -> Option<i32> {
-   |                          ^
+9  | struct Dummy(Vec<i32>);
+   | ----------------------- function or associated item `use_mut_singleton` not found for this
+...
+17 |     #[singleton_fn]
+   |     ^^^^^^^^^^^^^^^ function or associated item not found in `Dummy`
+   |
+   = help: items from traits can only be used if the trait is implemented and in scope
+   = note: the following trait defines an item `use_mut_singleton`, perhaps you need to implement it:
+           candidate #1: `blockz::singleton::Singleton`
+   = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error: first function argument _ (type: Box < [i32] >) must be a reference receiver (&self or &mut self)
-  --> $DIR/singleton-f-1.rs:27:31
+error[E0599]: no function or associated item named `use_mut_singleton_with_arg` found for struct `Dummy` in the current scope
+  --> $DIR/singleton-f-1.rs:22:5
    |
-27 |     pub async fn check_equals(_: Box<[i32]>) -> bool {
-   |                               ^
+9  | struct Dummy(Vec<i32>);
+   | ----------------------- function or associated item `use_mut_singleton_with_arg` not found for this
+...
+22 |     #[singleton_fn]
+   |     ^^^^^^^^^^^^^^^ function or associated item not found in `Dummy`
+   |
+   = help: items from traits can only be used if the trait is implemented and in scope
+   = note: the following trait defines an item `use_mut_singleton_with_arg`, perhaps you need to implement it:
+           candidate #1: `blockz::singleton::Singleton`
+   = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: no function or associated item named `use_singleton_with_arg` found for struct `Dummy` in the current scope
+  --> $DIR/singleton-f-1.rs:27:5
+   |
+9  | struct Dummy(Vec<i32>);
+   | ----------------------- function or associated item `use_singleton_with_arg` not found for this
+...
+27 |     #[singleton_fn]
+   |     ^^^^^^^^^^^^^^^ function or associated item not found in `Dummy`
+   |
+   = help: items from traits can only be used if the trait is implemented and in scope
+   = note: the following trait defines an item `use_singleton_with_arg`, perhaps you need to implement it:
+           candidate #1: `blockz::singleton::Singleton`
+   = note: this error originates in an attribute macro (in Nightly builds, run with -Z macro-backtrace for more info)

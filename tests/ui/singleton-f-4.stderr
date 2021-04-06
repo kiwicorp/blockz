@@ -1,0 +1,23 @@
+error: attempted to construct a singleton fn from function that has no inputs (must have at least a reference receiver - &self or &mut self)
+  --> $DIR/singleton-f-4.rs:12:18
+   |
+12 |     pub async fn is_vec_empty() -> bool {
+   |                  ^^^^^^^^^^^^
+
+error: attempted to construct a singleton fn from function that has no inputs (must have at least a reference receiver - &self or &mut self)
+  --> $DIR/singleton-f-4.rs:17:14
+   |
+17 |     async fn clear() {
+   |              ^^^^^
+
+error: attempted to construct a singleton fn from function that has no inputs (must have at least a reference receiver - &self or &mut self)
+  --> $DIR/singleton-f-4.rs:22:18
+   |
+22 |     pub async fn get_set() -> Option<i32> {
+   |                  ^^^^^^^
+
+error: attempted to construct a singleton fn from function that has no inputs (must have at least a reference receiver - &self or &mut self)
+  --> $DIR/singleton-f-4.rs:27:18
+   |
+27 |     pub async fn check_equals() -> bool {
+   |                  ^^^^^^^^^^^^

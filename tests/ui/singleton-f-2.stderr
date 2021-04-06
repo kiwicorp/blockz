@@ -1,20 +1,8 @@
-error: Unknown field: `a`
- --> $DIR/singleton-f-2.rs:8:13
+error: Unknown literal value `mootex`
+ --> $DIR/singleton-f-2.rs:8:20
   |
-8 | #[singleton(a = "mutex", b = "rwlock", c)]
-  |             ^
-
-error: Unknown field: `b`
- --> $DIR/singleton-f-2.rs:8:26
-  |
-8 | #[singleton(a = "mutex", b = "rwlock", c)]
-  |                          ^
-
-error: Unknown field: `c`
- --> $DIR/singleton-f-2.rs:8:40
-  |
-8 | #[singleton(a = "mutex", b = "rwlock", c)]
-  |                                        ^
+8 | #[singleton(lock = "mootex")]
+  |                    ^^^^^^^^
 
 error[E0599]: no function or associated item named `use_singleton` found for struct `Dummy` in the current scope
   --> $DIR/singleton-f-2.rs:12:5
