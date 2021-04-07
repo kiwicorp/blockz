@@ -40,7 +40,7 @@ jobs:
       run: make fmt VERBOSE=1 FMTFLAGS="-- --check"
 
     - name: Run cargo clippy
-      run: make clippy VERBOSE=1
+      run: RUSTFLAGS="-Dwarnings" make clippy VERBOSE=1 CLIPPYFLAGS="-- -D warnings"
 
     - name: Annotate commit with clippy warnings
       uses: actions-rs/clippy-check@v1
