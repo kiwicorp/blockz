@@ -1,4 +1,4 @@
-//! Env configuration ui test #3 - default configuration.
+//! Env configuration ui test #4 - prefix source (constant).
 
 #![cfg(feature = "env_configuration")]
 
@@ -7,7 +7,10 @@ use blockz::prelude::*;
 
 use serde::Deserialize;
 
+const ENV_CONFIG_PREFIX: &str = "SOURCED_PREFIX_";
+
 #[derive(Configuration, Deserialize, PartialEq)]
+#[configuration(env(prefix_source = "ENV_CONFIG_PREFIX.to_string()"))]
 struct MyConfig {
     server_port: u32,
 }
@@ -15,15 +18,9 @@ struct MyConfig {
 #[tokio::main]
 async fn main() {
     // set the required env variables
-    std::env::set_var("SERVER_PORT", "1234");
-    std::env::set_var("MANUAL_PREFIX_SERVER_PORT", "5678");
+    std::env::set_var("SOURCED_PREFIX_SERVER_PORT", "1234");
 
     let conf1 = <MyConfig as EasyConfiguration>::load().await.unwrap();
-    let conf2 = <MyConfig as Configuration>::load(None).await.unwrap();
+    let conf2 = <MyConfig as Configuration>::load(()).await.unwrap();
     assert!(conf1 == conf2);
-
-    let conf = <MyConfig as Configuration>::load(Some("MANUAL_PREFIX_".into()))
-        .await
-        .unwrap();
-    assert!(conf.server_port == 5678 as u32);
 }

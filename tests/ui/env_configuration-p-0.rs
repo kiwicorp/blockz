@@ -1,4 +1,4 @@
-//! Env configuration ui test #2 - default configuration.
+//! Env configuration ui test #0 - default opts.
 
 #![cfg(feature = "env_configuration")]
 
@@ -8,6 +8,7 @@ use blockz::prelude::*;
 use serde::Deserialize;
 
 #[derive(Configuration, Deserialize, PartialEq)]
+#[configuration(env())]
 struct MyConfig {
     server_port: u32,
 }

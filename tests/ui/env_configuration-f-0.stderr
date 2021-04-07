@@ -1,0 +1,17 @@
+error: Unknown field: `en`. Did you mean `env`?
+  --> $DIR/env_configuration-f-0.rs:10:17
+   |
+10 | #[configuration(en())]
+   |                 ^^
+
+error: Unknown field: `prefx`. Did you mean `prefix`?
+  --> $DIR/env_configuration-f-0.rs:16:21
+   |
+16 | #[configuration(env(prefx = "ABCD_"))]
+   |                     ^^^^^
+
+error: Unknown field: `prefix_src`. Did you mean `prefix_source`?
+  --> $DIR/env_configuration-f-0.rs:22:21
+   |
+22 | #[configuration(env(prefix_src = "\"abc_\".to_string()"))]
+   |                     ^^^^^^^^^^

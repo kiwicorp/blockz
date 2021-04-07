@@ -1,0 +1,8 @@
+error[E0277]: the trait bound `for<'de> MyConfig: serde::de::Deserialize<'de>` is not satisfied
+ --> $DIR/env_configuration-f-1.rs:7:10
+  |
+7 | #[derive(Configuration, PartialEq)]
+  |          ^^^^^^^^^^^^^ the trait `for<'de> serde::de::Deserialize<'de>` is not implemented for `MyConfig`
+  |
+  = note: required because of the requirements on the impl of `blockz::configuration::Configuration` for `EnvConfiguration<MyConfig>`
+  = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)

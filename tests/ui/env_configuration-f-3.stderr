@@ -1,0 +1,15 @@
+error: this file contains an unclosed delimiter
+  --> $DIR/env_configuration-f-3.rs:11:10
+   |
+11 | #[derive(Configuration, Deserialize, PartialEq)]
+   |          ^^^^^^^^^^^^^ unclosed delimiter
+   |
+   = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: failed to parse prefix source tokens: unexpected token
+  --> $DIR/env_configuration-f-3.rs:11:10
+   |
+11 | #[derive(Configuration, Deserialize, PartialEq)]
+   |          ^^^^^^^^^^^^^
+   |
+   = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)

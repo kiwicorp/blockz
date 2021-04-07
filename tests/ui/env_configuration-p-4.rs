@@ -1,4 +1,4 @@
-//! Env configuration ui test #4 - prefix source (constant).
+//! Env configuration ui test #4 - prefix source (function).
 
 #![cfg(feature = "env_configuration")]
 
@@ -7,10 +7,12 @@ use blockz::prelude::*;
 
 use serde::Deserialize;
 
-const ENV_CONFIG_PREFIX: &str = "SOURCED_PREFIX_";
+fn get_prefix() -> String {
+    "SOURCED_PREFIX_".into()
+}
 
 #[derive(Configuration, Deserialize, PartialEq)]
-#[configuration(env(prefix_source = "ENV_CONFIG_PREFIX.to_string()"))]
+#[configuration(env(prefix_source = "self::get_prefix()"))]
 struct MyConfig {
     server_port: u32,
 }
