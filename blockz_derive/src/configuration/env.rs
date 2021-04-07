@@ -5,9 +5,9 @@ use darling::FromMeta;
 use proc_macro2::TokenStream;
 
 use quote::quote;
-use syn::DeriveInput;
 
-use std::str::FromStr;
+use syn::DeriveInput;
+use syn::Expr;
 
 use crate::common;
 use crate::factory::ReusableFactory;
@@ -56,13 +56,18 @@ impl EnvConfigurationFactory {
         }
     }
 
-    fn get_configuration_impl_load_arg(&self) -> Result<TokenStream, proc_macro2::LexError> {
+    fn get_configuration_impl_load_arg(&self) -> Result<TokenStream, syn::Error> {
         let tokens: TokenStream = if let Some(prefix) = &self.opts.prefix {
             let lit_prefix = common::create_lit_str(prefix.clone());
             quote! { Some(#lit_prefix.to_string()) }
         } else if let Some(prefix_source) = &self.opts.prefix_source {
-            let prefix_source_tokens = TokenStream::from_str(prefix_source.as_str())?;
-            quote! { Some(#prefix_source_tokens) }
+            let expr: Expr = syn::parse_str(prefix_source).map_err(|err: syn::Error| {
+                syn::Error::new(
+                    err.span(),
+                    format!("failed to parse prefix source tokens: {}", err.to_string()),
+                )
+            })?;
+            quote! { Some(#expr) }
         } else {
             quote! { opts }
         };
