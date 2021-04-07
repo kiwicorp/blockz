@@ -1,4 +1,41 @@
-//! Configurations.
+//! Support for common configuration behaviour and loading them from various sources.
+//!
+//! # Example
+//!
+//! This example shows how to automatically derive Configuration on a struct. This particular
+//! example will showcase loading the configuration from environment variables with a particular
+//! prefix.
+//!
+//! **NOTE**: This example requires the __env_configuration__ feature.
+//!
+//! ```
+//! use blockz::prelude::*;
+//!
+//! use serde::Deserialize;
+//!
+//! #[derive(Configuration, Deserialize)]
+//! #[configuration(env(prefix = "COOL_APP_"))]
+//! struct ServerConfig {
+//!     #[serde(rename = "bind_addr")]
+//!     address: String,
+//!     #[serde(rename = "bind_port")]
+//!     port: u16,
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     # std::env::set_var("COOL_APP_BIND_ADDR", "0.0.0.0");
+//!     # std::env::set_var("COOL_APP_BIND_PORT", "58732");
+//!     let config = <ServerConfig as EasyConfiguration>::load()
+//!         .await
+//!         .expect("Failed to load configuration from the environment!");
+//!     # assert_eq!(config.address.as_str(), "0.0.0.0");
+//!     # assert_eq!(config.port, 58732);
+//!     println!("Server binding to {}:{}.", config.address, config.port);
+//!     // Server binding to 0.0.0.0:58732.
+//! }
+//! ```
+
 
 #[cfg(feature = "env_configuration")]
 use serde::Deserialize;
@@ -43,34 +80,6 @@ where
 
     async fn load() -> Self::Result {
         C::load(O::default()).await
-    }
-}
-
-/// Behaviour expected from a function that sources options used for loading a configuration.
-// R: the return type of the function.
-pub trait OptsSourceFn<R>
-where
-    R: Send,
-{
-    /// The return type of the function.
-    type Return: Future<Output = R> + Send;
-
-    fn call_once(self) -> Self::Return;
-}
-
-// R: the return type of the function.
-// F: the function to be executed.
-// Fr: the future produced by the function F.
-impl<R, F, Fr> OptsSourceFn<R> for F
-where
-    F: FnOnce() -> Fr,
-    Fr: Future<Output = R> + Send,
-    R: Send,
-{
-    type Return = Fr;
-
-    fn call_once(self) -> Self::Return {
-        self()
     }
 }
 

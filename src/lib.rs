@@ -1,6 +1,5 @@
-//! Blockz.
-
-pub use blockz_derive as derive;
+//! Blockz is an opinionated library that aims to make it a pleasure to develop
+//! networked applications in Rust.
 
 #[cfg(feature = "configuration")]
 #[cfg_attr(docsrs, doc(cfg(feature = "configuration")))]
@@ -10,7 +9,9 @@ pub mod configuration;
 #[cfg_attr(docsrs, doc(cfg(feature = "singleton")))]
 pub mod singleton;
 
-/// Prelude for blockz.
+pub use blockz_derive::*;
+
+/// Blockz prelude - useful re-exports.
 pub mod prelude {
     #[cfg(feature = "configuration")]
     #[cfg_attr(docsrs, doc(cfg(feature = "configuration")))]
@@ -20,7 +21,7 @@ pub mod prelude {
     #[cfg_attr(docsrs, doc(cfg(feature = "configuration")))]
     pub use crate::configuration::EasyConfiguration;
 
-    pub use crate::derive::*;
+    pub use blockz_derive::*;
 
     #[cfg(feature = "singleton")]
     #[cfg_attr(docsrs, doc(cfg(feature = "singleton")))]
@@ -28,8 +29,6 @@ pub mod prelude {
 }
 
 /// Tests for the derive crate.
-///
-/// These actually just try to compile the examples.
 #[cfg(test)]
 mod test {
     macro_rules! ui_tests {
@@ -44,17 +43,6 @@ mod test {
             )*
         };
     }
-
-    // macro_rules! ui_test {
-    //     (pass: [$($feat_pass: literal [$( $index_feat_pass:literal ),*]);*], fail: [$($feat_fail: literal [$( $index_feat_fail:literal ),*]);*]) => {
-    //         let t = ::trybuild::TestCases::new();
-    //         $(
-    //             $(
-    //                 t.pass(format!("tests/ui/{}-p-{}.rs", $feat_pass, $index_feat_pass));
-    //             )*
-    //         )*
-    //     };
-    // }
 
     /// Test the `singleton` feature.
     #[test]
