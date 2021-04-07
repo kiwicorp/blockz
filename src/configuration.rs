@@ -36,11 +36,9 @@
 //! }
 //! ```
 
-
 #[cfg(feature = "env_configuration")]
 use serde::Deserialize;
 
-use std::future::Future;
 use std::marker::PhantomData;
 
 /// Common behaviour of configurations.
