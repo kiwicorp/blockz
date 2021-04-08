@@ -9,6 +9,8 @@
 //! **NOTE**: This example requires the __env_configuration__ feature.
 //!
 //! ```
+//! # #[cfg(doc)]
+//! # {
 //! use blockz::prelude::*;
 //!
 //! use serde::Deserialize;
@@ -34,6 +36,9 @@
 //!     println!("Server binding to {}:{}.", config.address, config.port);
 //!     // Server binding to 0.0.0.0:58732.
 //! }
+//! # }
+//! # #[cfg(not(doc))]
+//! # fn main() {}
 //! ```
 
 #[cfg(feature = "env_configuration")]
