@@ -63,4 +63,4 @@ env_configuration = ["configuration", "blockz_derive/env_configuration", "envy",
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs", "--cfg", "doc"]
