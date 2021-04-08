@@ -1,5 +1,7 @@
 //! Blockz derive.
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 #[cfg(feature = "configuration")]
 #[cfg_attr(docsrs, doc(cfg(feature = "configuration")))]
 mod configuration;

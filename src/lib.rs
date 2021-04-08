@@ -1,6 +1,8 @@
 //! Blockz is an opinionated library that aims to make it a pleasure to develop
 //! networked applications in Rust.
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 #[cfg(feature = "configuration")]
 #[cfg_attr(docsrs, doc(cfg(feature = "configuration")))]
 pub mod configuration;
