@@ -37,8 +37,11 @@ jobs:
         override: true
         components: rustfmt, rust-src
 
+    - name: Test documentation
+      run: make test TESTFLAGS="--features all --doc"
+
     - name: Build Documentation
-      run: make doc DOCFLAGS="--no-deps"
+      run: make doc DOCFLAGS="--features all --no-deps --document-private-items"
 
     - name: Deploy Docs
       uses: peaceiris/actions-gh-pages@v3
