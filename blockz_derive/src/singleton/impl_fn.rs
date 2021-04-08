@@ -143,7 +143,7 @@ impl<'f> ImplFnFactory<'f> {
         target.vis = syn::Visibility::Inherited;
     }
 
-    /// Adds an #[automatically_derived] to the target function.
+    /// Adds an #\[automatically_derived\] to the target function.
     fn add_automatically_derived_attr(target: &mut ItemFn) -> syn::Result<()> {
         let parser = Attribute::parse_outer;
         let parsed_attrs = parser.parse2(quote! { #[automatically_derived] })?;
