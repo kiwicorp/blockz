@@ -1,6 +1,64 @@
 //! Support for common configuration behaviour and loading them from various sources.
 //!
-//! # Example
+//! # Direct configuration example
+//!
+//! This example shows how to use the direct configuration. Please note that the direct
+//! configuration is usually useful in testing scenarios. Production usage is discouraged.
+//!
+//! ```
+//! # use blockz::prelude::*;
+//! #[derive(Configuration)]
+//! #[configuration(direct)]
+//! struct ServerConfig {
+//!     address: String,
+//!     port: u16,
+//! }
+//!
+//! # #[tokio::main]
+//! # async fn main() {
+//! let config = <ServerConfig as Configuration>::load(ServerConfig {
+//!     address: "127.0.0.1".to_string(),
+//!     port: 58732,
+//! }).await;
+//! # assert_eq!(config.address.as_str(), "127.0.0.1");
+//! # assert_eq!(config.port, 58732);
+//! println!("Server binding to {}:{}.", config.address, config.port);
+//! // Server binding to 127.0.0.1:58732.
+//! # }
+//! ```
+//!
+//! If the configuration type implements Default, you can use EasyConfiguration to load the default
+//! value, like so:
+//!
+//! ```
+//! # use blockz::prelude::*;
+//! #[derive(Configuration)]
+//! #[configuration(direct)]
+//! struct ServerConfig {
+//!     address: String,
+//!     port: u16,
+//! }
+//!
+//! impl Default for ServerConfig {
+//!     fn default() -> ServerConfig {
+//!         ServerConfig {
+//!             address: "0.0.0.0".to_string(),
+//!             port: 9999,
+//!         }
+//!     }
+//! }
+//!
+//! # #[tokio::main]
+//! # async fn main() {
+//! let config = <ServerConfig as EasyConfiguration>::load().await;
+//! # assert_eq!(config.address.as_str(), "0.0.0.0");
+//! # assert_eq!(config.port, 9999);
+//! println!("Server binding to {}:{}.", config.address, config.port);
+//! // Server binding to 0.0.0.0:9999.
+//! # }
+//! ```
+//!
+//! # Env configuration example
 //!
 //! This example shows how to automatically derive Configuration on a struct. This particular
 //! example will showcase loading the configuration from environment variables with a particular
@@ -11,10 +69,8 @@
 //! ```
 //! # #[cfg(doc)]
 //! # {
-//! use blockz::prelude::*;
-//!
-//! use serde::Deserialize;
-//!
+//! # use blockz::prelude::*;
+//! # use serde::Deserialize;
 //! #[derive(Configuration, Deserialize)]
 //! #[configuration(env(prefix = "COOL_APP_"))]
 //! struct ServerConfig {
@@ -24,18 +80,18 @@
 //!     port: u16,
 //! }
 //!
-//! #[tokio::main]
-//! async fn main() {
-//!     # std::env::set_var("COOL_APP_BIND_ADDR", "0.0.0.0");
-//!     # std::env::set_var("COOL_APP_BIND_PORT", "58732");
-//!     let config = <ServerConfig as EasyConfiguration>::load()
-//!         .await
-//!         .expect("Failed to load configuration from the environment!");
-//!     # assert_eq!(config.address.as_str(), "0.0.0.0");
-//!     # assert_eq!(config.port, 58732);
-//!     println!("Server binding to {}:{}.", config.address, config.port);
-//!     // Server binding to 0.0.0.0:58732.
-//! }
+//! # #[tokio::main]
+//! # async fn main() {
+//! # std::env::set_var("COOL_APP_BIND_ADDR", "0.0.0.0");
+//! # std::env::set_var("COOL_APP_BIND_PORT", "58732");
+//! let config = <ServerConfig as EasyConfiguration>::load()
+//!     .await
+//!     .expect("Failed to load configuration from the environment!");
+//! # assert_eq!(config.address.as_str(), "0.0.0.0");
+//! # assert_eq!(config.port, 58732);
+//! println!("Server binding to {}:{}.", config.address, config.port);
+//! // Server binding to aaa.bbb.ccc.ddd:ppppp.
+//! # }
 //! # }
 //! # #[cfg(not(doc))]
 //! # fn main() {}
