@@ -1,11 +1,11 @@
 [package]
 name = "blockz_derive"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["cezarmathe <me@cezarmathe.com>"]
 edition = "2018"
 description = "Blockz is an opinionated library that aims to make it a pleasure to develop networked applications in Rust."
 readme = "../README.md"
-license-file = "../LICENSE"
+license = "MIT"
 homepage = "https://docs.selftech.io/blockz_derive"
 repository = "https://github.com/selftechio/blockz"
 
