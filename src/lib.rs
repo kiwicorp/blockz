@@ -1,5 +1,7 @@
 //! Blockz is an opinionated library that aims to make it a pleasure to develop
 //! networked applications in Rust.
+//!
+//! Check the documentation of each module for more information and examples.
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
