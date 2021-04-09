@@ -3,6 +3,10 @@ name = "blockz_derive"
 version = "0.2.0"
 authors = ["cezarmathe <me@cezarmathe.com>"]
 edition = "2018"
+description = "Blockz is an opinionated library that aims to make it a pleasure to develop networked applications in Rust."
+license-file = "../README.md"
+homepage = "htpps://docs.selftech.io/blockz_derive"
+repository = "https://github.com/selftechio/blockz"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
