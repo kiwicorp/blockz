@@ -7,12 +7,12 @@ error: implementation of `SingletonFnMutWithArg` is not general enough
    ::: $WORKSPACE/src/singleton.rs
     |
     | / pub trait SingletonFnMutWithArg<'i, I, A, R>
-165 | | where
-166 | |     A: Send,
-167 | |     R: Send,
+231 | | where
+232 | |     A: Send,
+233 | |     R: Send,
 ...   |
-172 | |     fn call_once(self, inner: &'i mut I, arg: A) -> Self::SingletonResult;
-173 | | }
+238 | |     fn call_once(self, inner: &'i mut I, arg: A) -> Self::SingletonResult;
+239 | | }
     | |_- trait `SingletonFnMutWithArg` defined here
     |
     = note: `for<'_, '_, '_> fn(&mut Dummy, (&usize, &i32)) -> impl Future {Dummy::blockz_singleton_fn_mut_with_arg_get_set}` must implement `SingletonFnMutWithArg<'0, Dummy, (&usize, &i32), Option<i32>>`, for any lifetime `'0`...
@@ -28,12 +28,12 @@ error: implementation of `SingletonFnWithArg` is not general enough
    ::: $WORKSPACE/src/singleton.rs
     |
     | / pub trait SingletonFnWithArg<'i, I, A, R>
-93  | | where
-94  | |     A: Send,
-95  | |     R: Send,
+159 | | where
+160 | |     A: Send,
+161 | |     R: Send,
 ...   |
-100 | |     fn call_once(self, inner: &'i I, arg: A) -> Self::SingletonResult;
-101 | | }
+166 | |     fn call_once(self, inner: &'i I, arg: A) -> Self::SingletonResult;
+167 | | }
     | |_- trait `SingletonFnWithArg` defined here
     |
     = note: `for<'_, '_> fn(&Dummy, &[i32]) -> impl Future {Dummy::blockz_singleton_fn_with_arg_check_equals}` must implement `SingletonFnWithArg<'0, Dummy, &[i32], bool>`, for any lifetime `'0`...
