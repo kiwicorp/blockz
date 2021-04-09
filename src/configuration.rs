@@ -6,6 +6,8 @@
 //! configuration is usually useful in testing scenarios. Production usage is discouraged.
 //!
 //! ```
+//! # #[cfg(feature = "configuration")]
+//! # {
 //! # use blockz::prelude::*;
 //! #[derive(Configuration)]
 //! #[configuration(direct)]
@@ -25,6 +27,9 @@
 //! println!("Server binding to {}:{}.", config.address, config.port);
 //! // Server binding to 127.0.0.1:58732.
 //! # }
+//! # }
+//! # #[cfg(not(feature = "configuration"))]
+//! # fn main() {}
 //! ```
 //!
 //! If the configuration type implements Default, you can use EasyConfiguration to load the default
@@ -58,16 +63,14 @@
 //! # }
 //! ```
 //!
-//! # Env configuration example
+//! # Env configuration examples
 //!
-//! This example shows how to automatically derive Configuration on a struct. This particular
-//! example will showcase loading the configuration from environment variables with a particular
-//! prefix.
+//! **NOTE**: These examples requires the __env_configuration__ feature.
 //!
-//! **NOTE**: This example requires the __env_configuration__ feature.
+//! The first example shows how to use the env configuration with a prefix.
 //!
 //! ```
-//! # #[cfg(feature = "configuration")]
+//! # #[cfg(feature = "env_configuration")]
 //! # {
 //! # use blockz::prelude::*;
 //! # use serde::Deserialize;
@@ -93,7 +96,85 @@
 //! // Server binding to aaa.bbb.ccc.ddd:ppppp.
 //! # }
 //! # }
-//! # #[cfg(not(feature = "configuration"))]
+//! # #[cfg(not(feature = "env_configuration"))]
+//! # fn main() {}
+//! ```
+//!
+//! The second example shows how to use the env configuration with a prefix source in the form of a
+//! constant.
+//!
+//! ```
+//! # #[cfg(feature = "env_configuration")]
+//! # {
+//! # use blockz::prelude::*;
+//! # use serde::Deserialize;
+//! /// This is our prefix.
+//! const PREFIX: &str = "COOL_APP_";
+//!
+//! #[derive(Configuration, Deserialize)]
+//! #[configuration(env(prefix_source = "PREFIX.to_string()"))]
+//! struct ServerConfig {
+//!     #[serde(rename = "bind_addr")]
+//!     address: String,
+//!     #[serde(rename = "bind_port")]
+//!     port: u16,
+//! }
+//!
+//! # #[tokio::main]
+//! # async fn main() {
+//! # std::env::set_var("COOL_APP_BIND_ADDR", "0.0.0.0");
+//! # std::env::set_var("COOL_APP_BIND_PORT", "58732");
+//! let config = <ServerConfig as EasyConfiguration>::load()
+//!     .await
+//!     .expect("Failed to load configuration from the environment!");
+//! # assert_eq!(config.address.as_str(), "0.0.0.0");
+//! # assert_eq!(config.port, 58732);
+//! println!("Server binding to {}:{}.", config.address, config.port);
+//! // Server binding to aaa.bbb.ccc.ddd:ppppp.
+//! # }
+//! # }
+//! # #[cfg(not(feature = "env_configuration"))]
+//! # fn main() {}
+//! ```
+//!
+//! The third example shows how to use the env configuration with a prefix source in the form of a
+//! function that can return an error. The error must be mapped to an `envy::Error`.
+//!
+//! ```
+//! # #[cfg(feature = "env_configuration")]
+//! # {
+//! # use blockz::prelude::*;
+//! # use serde::Deserialize;
+//! /// This function sources our prefix.
+//! fn source_prefix() -> Result<String, envy::Error> {
+//!     std::env::var("COOL_APP_PREFIX")
+//!         .map_err(|err| envy::Error::Custom(format!("failed to source the prefix: {}", err)))
+//! }
+//!
+//! #[derive(Configuration, Deserialize)]
+//! #[configuration(env(prefix_source = "source_prefix()?"))]
+//! struct ServerConfig {
+//!     #[serde(rename = "bind_addr")]
+//!     address: String,
+//!     #[serde(rename = "bind_port")]
+//!     port: u16,
+//! }
+//!
+//! # #[tokio::main]
+//! # async fn main() {
+//! # std::env::set_var("COOL_APP_PREFIX", "COOL_APP_");
+//! # std::env::set_var("COOL_APP_BIND_ADDR", "0.0.0.0");
+//! # std::env::set_var("COOL_APP_BIND_PORT", "58732");
+//! let config = <ServerConfig as EasyConfiguration>::load()
+//!     .await
+//!     .expect("Failed to load configuration from the environment!");
+//! # assert_eq!(config.address.as_str(), "0.0.0.0");
+//! # assert_eq!(config.port, 58732);
+//! println!("Server binding to {}:{}.", config.address, config.port);
+//! // Server binding to aaa.bbb.ccc.ddd:ppppp.
+//! # }
+//! # }
+//! # #[cfg(not(feature = "env_configuration"))]
 //! # fn main() {}
 //! ```
 
