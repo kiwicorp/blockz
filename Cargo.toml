@@ -1,10 +1,11 @@
 [package]
 name = "blockz"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["cezarmathe <me@cezarmathe.com>"]
 edition = "2018"
 description = "Blockz is an opinionated library that aims to make it a pleasure to develop networked applications in Rust."
-license-file = "README.md"
+readme = "README.md"
+license-file = "LICENSE"
 homepage = "https://docs.selftech.io/blockz"
 repository = "https://github.com/selftechio/blockz"
 
@@ -18,7 +19,7 @@ members = [
 
 [dependencies]
 # Proc macro crate dependency.
-blockz_derive = { path = "./blockz_derive", version = "0.2.0" }
+blockz_derive = { path = "./blockz_derive", version = "0.2.1" }
 
 # Library dependencies.
 anyhow      = "^1.0"
