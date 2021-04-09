@@ -7,12 +7,11 @@
 //! ```
 //! # #[cfg(feature = "singleton")]
 //! # {
-//! use blockz::prelude::*;
+//! # use blockz::prelude::*;
 //! # use std::error::Error;
 //! # use std::io;
 //! # use std::net::SocketAddr;
 //! # use std::str::FromStr;
-//!
 //! // For the sake of simplicity, in this example the database connection pool contains only the
 //! // connection parameters.
 //! #[derive(Singleton)]
