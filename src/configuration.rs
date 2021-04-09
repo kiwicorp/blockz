@@ -67,7 +67,7 @@
 //! **NOTE**: This example requires the __env_configuration__ feature.
 //!
 //! ```
-//! # #[cfg(doc)]
+//! # #[cfg(feature = "configuration")]
 //! # {
 //! # use blockz::prelude::*;
 //! # use serde::Deserialize;
@@ -93,7 +93,7 @@
 //! // Server binding to aaa.bbb.ccc.ddd:ppppp.
 //! # }
 //! # }
-//! # #[cfg(not(doc))]
+//! # #[cfg(not(feature = "configuration"))]
 //! # fn main() {}
 //! ```
 
