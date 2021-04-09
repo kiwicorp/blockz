@@ -47,6 +47,12 @@ macro_rules! factory {
 ///
 /// This requires that the struct or enum is [Send].
 ///
+/// This derive procedural macro accepts an attribute: `#[singleton]`. The attribute may configure
+/// the underlying lock used for securing access to the singleton. Valid values:
+///
+/// - `#[singleton(lock = "mutex")]` _(default)_
+/// - `#[singleton(lock = "rwlock")]`
+///
 /// Required available imports:
 /// - [anyhow]
 /// - [async_trait]
@@ -72,8 +78,12 @@ pub fn derive_singleton(input: TokenStream) -> TokenStream {
 ///
 /// The modified method becomes a function that will use the underlying singleton.
 ///
-/// Caveats: you may not name any function args as any other identifier found in it's
-/// implementation.
+/// The input function must have the following properties:
+///
+/// - the first argument must be a reference receiver (&self or &mut self)
+/// - function arguments identifiers must not conflict with other identifiers from the function body
+///   (such as other function names in function calls, struct fields etc)
+/// - references are not allowed (use Box\<T\> or Arc\<T\> instead)
 #[proc_macro_attribute]
 #[cfg(feature = "singleton")]
 #[cfg_attr(docsrs, doc(cfg(feature = "singleton")))]
@@ -84,9 +94,19 @@ pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
 
 /// Derive the Configuration trait.
 ///
-/// All fields shall be loaded from environment variables, at the moment.
+/// This requires that the struct or enum is [Send].
 ///
-/// This requires that the struct or enum is [Deserialize].
+/// Configuring the implementation is done via the `#[configuration]` attribute:
+///
+/// - by default, direct configuration will be implemented, if no other configuration feature is
+///   enabled
+/// - direct configuration: `#[configuration(direct)]`
+/// - env configuration with no prefix: `#[configuraton(env())]`
+/// - env configuration with a prefix: `#[configuraton(env(prefix = "MY_PREFIX"))]`
+/// - env configuration with a prefix source: `#[configuraton(env(prefix_source = "MY_SOURCE"))]`
+///
+/// The prefix source will be interpreted as an expression that will be used to source the prefix.
+/// You can use either constants or functions.
 ///
 /// Required available imports:
 /// - [anyhow]
@@ -94,7 +114,7 @@ pub fn singleton_fn(_: TokenStream, item: TokenStream) -> TokenStream {
 /// - [blockz]
 /// - [config]
 ///
-/// [Deserialize]: https://docs.rs/serde/1.0.120/serde/trait.Deserialize.html
+/// [Send]: https://doc.rust-lang.org/stable/std/marker/trait.Send.html
 /// [anyhow]: https://docs.rs/anyhow
 /// [async_trait]: https://docs.rs/async_trait
 /// [blockz]: https://github.com/selftechio/blockz
