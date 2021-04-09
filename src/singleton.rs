@@ -1,4 +1,71 @@
-//! Singletons.
+//! Support for singletons.
+//!
+//! # Example
+//!
+//! This example showcases how you can use the Singleton trait by leveraging procedural macros.
+//!
+//! ```
+//! # #[cfg(feature = "singleton")]
+//! # {
+//! use blockz::prelude::*;
+//! # use std::error::Error;
+//! # use std::io;
+//! # use std::net::SocketAddr;
+//! # use std::str::FromStr;
+//!
+//! // For the sake of simplicity, in this example the database connection pool contains only the
+//! // connection parameters.
+//! #[derive(Singleton)]
+//! #[singleton(lock = "rwlock")]
+//! struct DbConnPool {
+//!     addr: SocketAddr,
+//!     user: String,
+//!     pass: String,
+//! }
+//!
+//! impl DbConnPool {
+//!     #[singleton_fn]
+//!     async fn addr(&self) -> SocketAddr {
+//!         self.addr.clone()
+//!     }
+//!
+//!     #[singleton_fn]
+//!     async fn new_connection(&mut self,
+//!                             new_addr: SocketAddr,
+//!                             new_user: String,
+//!                             new_pass: String) -> io::Result<()> {
+//!         self.addr = new_addr;
+//!         self.user = new_user;
+//!         self.pass = new_pass;
+//!         Ok(())
+//!     }
+//! }
+//!
+//! # #[tokio::main]
+//! # async fn main() -> Result<(), Box<dyn Error>> {
+//! DbConnPool::init_singleton(DbConnPool {
+//!     addr: SocketAddr::from_str("127.0.0.1:8080")?,
+//!     user: "tuxthepenguin".to_string(),
+//!     pass: "NotASafePassword42".to_string(),
+//! });
+//!
+//! let addr = DbConnPool::addr().await;
+//! println!("DbConnPool address: {}.", addr); // 127.0.0.1:8080.
+//! # assert_eq!(addr, SocketAddr::from_str("127.0.0.1:8080")?);
+//!
+//! DbConnPool::new_connection(
+//!     SocketAddr::from_str("192.168.42.42:4242")?,
+//!     "hello".to_string(),
+//!     "world".to_string()
+//! ).await.expect("Failed to create a new connection!");
+//! println!("DbConnPool address: {}.", DbConnPool::addr().await); // 192.168.42.42:4242.
+//! # assert_eq!(DbConnPool::addr().await, SocketAddr::from_str("192.168.42.42:4242")?);
+//! # Ok(())
+//! # }
+//! # }
+//! # #[cfg(not(feature = "singleton"))]
+//! # fn main() {}
+//! ```
 
 use std::future::Future;
 
