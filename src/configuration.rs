@@ -65,7 +65,7 @@
 //!
 //! # Env configuration examples
 //!
-//! **NOTE**: These examples requires the __env_configuration__ feature.
+//! **NOTE**: These examples require the __env_configuration__ feature.
 //!
 //! The first example shows how to use the env configuration with a prefix.
 //!
