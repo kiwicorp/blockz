@@ -5,7 +5,7 @@ authors = ["cezarmathe <me@cezarmathe.com>"]
 edition = "2018"
 description = "Blockz is an opinionated library that aims to make it a pleasure to develop networked applications in Rust."
 license-file = "README.md"
-homepage = "htpps://docs.selftech.io/blockz"
+homepage = "https://docs.selftech.io/blockz"
 repository = "https://github.com/selftechio/blockz"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
