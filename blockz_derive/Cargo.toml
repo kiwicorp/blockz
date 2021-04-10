@@ -43,3 +43,7 @@ no_absolute_paths = []
 
 # Enables deriving env configurations.
 env_configuration = ["configuration"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs", "--cfg", "doc"]
