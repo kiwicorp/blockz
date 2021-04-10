@@ -19,7 +19,7 @@ members = [
 
 [dependencies]
 # Proc macro crate dependency.
-blockz_derive = { path = "./blockz_derive", version = "0.2.1" }
+blockz_derive = { path = "./blockz_derive", version = "0.2.2" }
 
 # Library dependencies.
 anyhow      = "^1.0"
