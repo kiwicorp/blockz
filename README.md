@@ -13,7 +13,7 @@ CoRpOrAtIoN, gOoGlE
 Just kidding. This is a TL;DR of my reasons:
 
 - If it compiles, it will probably have business logic bugs at most. Very, very
-slim chanches of memory or concurrency issues. And that makes me feel great.
+slim chances of memory or concurrency issues. And that makes me feel great.
 - The macro system is great. You can create some really cool stuff(looking at
 you, [serde]). And that happens at compile-time, which means free
 bug-inspection by the compiler and free performance.
