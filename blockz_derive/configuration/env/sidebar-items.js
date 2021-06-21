@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["EnvConfigurationFactory","Factory that builds a Configuration implementation based on envy."],["EnvConfigurationOpts","Configuration options for a configuration backed by envy."]]});

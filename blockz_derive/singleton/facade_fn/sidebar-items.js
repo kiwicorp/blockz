@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["FacadeFnFactory","Factory that builds the implementation of singleton fns."]]});

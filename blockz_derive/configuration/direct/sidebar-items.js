@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["DirectConfigurationFactory","Factory that builds a Configuration implementation based on DirectConfiguration."]]});

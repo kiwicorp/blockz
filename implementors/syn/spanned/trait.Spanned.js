@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["blockz_derive"] = [{"text":"impl&lt;'e&gt; <a class=\"trait\" href=\"https://docs.rs/syn/1.0.73/syn/spanned/trait.Spanned.html\" title=\"trait syn::spanned::Spanned\">Spanned</a> for <a class=\"enum\" href=\"blockz_derive/singleton/singleton_fns/enum.SingletonFnError.html\" title=\"enum blockz_derive::singleton::singleton_fns::SingletonFnError\">SingletonFnError</a>&lt;'e&gt;","synthetic":false,"types":["blockz_derive::singleton::singleton_fns::SingletonFnError"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

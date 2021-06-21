@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["blockz_derive"] = [{"text":"impl FromDeriveInput for <a class=\"struct\" href=\"blockz_derive/configuration/struct.ConfigurationOpts.html\" title=\"struct blockz_derive::configuration::ConfigurationOpts\">ConfigurationOpts</a>","synthetic":false,"types":["blockz_derive::configuration::ConfigurationOpts"]},{"text":"impl FromDeriveInput for <a class=\"struct\" href=\"blockz_derive/singleton/struct.SingletonOpts.html\" title=\"struct blockz_derive::singleton::SingletonOpts\">SingletonOpts</a>","synthetic":false,"types":["blockz_derive::singleton::SingletonOpts"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

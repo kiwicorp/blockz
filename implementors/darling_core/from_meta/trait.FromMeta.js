@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["blockz_derive"] = [{"text":"impl FromMeta for <a class=\"struct\" href=\"blockz_derive/configuration/env/struct.EnvConfigurationOpts.html\" title=\"struct blockz_derive::configuration::env::EnvConfigurationOpts\">EnvConfigurationOpts</a>","synthetic":false,"types":["blockz_derive::configuration::env::EnvConfigurationOpts"]},{"text":"impl FromMeta for <a class=\"enum\" href=\"blockz_derive/singleton/lock/enum.SingletonLock.html\" title=\"enum blockz_derive::singleton::lock::SingletonLock\">SingletonLock</a>","synthetic":false,"types":["blockz_derive::singleton::lock::SingletonLock"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

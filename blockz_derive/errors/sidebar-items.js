@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["ProcMacroErrorExt","Common error behaviour expected from proc macro crates."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["DirectConfiguration","Direct configuration that just returns the passed value."],["EnvConfiguration","Configuration that can be sourced from environment variables."]],"trait":[["Configuration","Common behaviour of configurations."],["EasyConfiguration","An easy configuration is a configuration that can be loaded without other parameters."]]});

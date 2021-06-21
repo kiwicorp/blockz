@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["Factory","A factory thar produces a product."],["ReusableFactory","A factory that can be reused (by taking &mut self instead of self)."]]});

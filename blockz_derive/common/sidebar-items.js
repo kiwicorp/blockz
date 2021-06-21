@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["create_doc","Create a doc attribute."],["create_lit_str","Create a LitStr."]]});

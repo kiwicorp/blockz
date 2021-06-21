@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["SingletonLock","The lock behing a singleton."]]});

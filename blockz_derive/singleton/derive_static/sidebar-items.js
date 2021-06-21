@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["SingletonStaticFactory","Factory that builds a singleton static."]]});
