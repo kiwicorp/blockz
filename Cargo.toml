@@ -1,6 +1,4 @@
 [workspace]
 members = [
-    "blockz-configuration",
     "blockz-futures",
-    "blockz-macros",
 ]
