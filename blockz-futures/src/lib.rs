@@ -8,6 +8,7 @@ use futures::TryFuture;
 use tokio::sync::oneshot;
 
 use self::cancel::Cancel;
+use self::cancel::CancelChannelFuture;
 use self::cancel::CancelHandle;
 use self::cancel::TryCancel;
 
@@ -17,13 +18,21 @@ pub mod timeout;
 /// Kiwi extensions for futures.
 pub trait FutureKiwiExt: Future + Sized {
     /// Wrap a future with a cancel handle.
-    fn cancel(self) -> (Cancel<Self>, CancelHandle) {
+    fn cancel(self) -> (Cancel<Self, CancelChannelFuture>, CancelHandle) {
         Cancel::new(self)
     }
 
-    /// Wrap a future with a custom cancel channel.
-    fn with_cancel(self, cancel: oneshot::Receiver<()>) -> Cancel<Self> {
-        Cancel::with_channel(self, cancel)
+    /// Wrap a future with a cancel future.
+    fn with_cancel<C: Future<Output = ()>>(self, cancel: C) -> Cancel<Self, C> {
+        Cancel::with_cancel(self, cancel)
+    }
+
+    /// Wrap a future with a cancel channel.
+    fn with_cancel_channel(
+        self,
+        cancel: oneshot::Receiver<()>,
+    ) -> Cancel<Self, CancelChannelFuture> {
+        Cancel::with_cancel_channel(self, cancel)
     }
 }
 

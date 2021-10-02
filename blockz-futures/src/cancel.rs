@@ -13,45 +13,50 @@ use tokio::sync::oneshot;
 pub struct Canceled;
 
 #[pin_project]
-pub struct Cancel<F> {
+pub struct Cancel<F, C> {
     #[pin]
     future: F,
     #[pin]
-    cancel: oneshot::Receiver<()>,
+    cancel: C,
 }
 
-impl<F> Cancel<F> {
+impl<F> Cancel<F, CancelChannelFuture> {
     /// Create a new `Cancel` future.
-    pub fn new(future: F) -> (Self, CancelHandle) {
+    pub(crate) fn new(future: F) -> (Self, CancelHandle) {
         let (tx, rx) = oneshot::channel();
-        (Self { future, cancel: rx }, CancelHandle::new(tx))
+        let cancel = CancelChannelFuture::new(rx);
+        (Self { future, cancel }, CancelHandle::new(tx))
     }
 
     /// Create a `Cancel` future with a `cancel` channel.
-    pub fn with_channel(future: F, cancel: oneshot::Receiver<()>) -> Self {
+    pub(crate) fn with_cancel_channel(future: F, cancel: oneshot::Receiver<()>) -> Self {
+        let cancel = CancelChannelFuture::new(cancel);
         Self { future, cancel }
     }
 }
 
-impl<F: Future> Future for Cancel<F> {
+impl<F, C> Cancel<F, C> {
+    /// Create a new `Cancel` future with a `cancel` future.
+    pub(crate) fn with_cancel(future: F, cancel: C) -> Self {
+        Self { future, cancel }
+    }
+}
+
+impl<F: Future, C: Future<Output = ()>> Future for Cancel<F, C> {
     type Output = Result<F::Output, Canceled>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.project();
         let future: Pin<&mut F> = this.future;
-        let cancel: Pin<&mut oneshot::Receiver<()>> = this.cancel;
+        let cancel: Pin<&mut C> = this.cancel;
 
         if let Poll::Ready(out) = future.poll(cx) {
-            return Poll::Ready(Ok(out));
+            Poll::Ready(Ok(out))
+        } else if cancel.poll(cx).is_ready() {
+            Poll::Ready(Err(Canceled))
+        } else {
+            Poll::Pending
         }
-        if let Poll::Ready(cancel) = cancel.poll(cx) {
-            match cancel {
-                Ok(()) => return Poll::Ready(Err(Canceled)),
-                Err(e) => panic!("cancel dropped"),
-            }
-        }
-
-        Poll::Pending
     }
 }
 
@@ -98,12 +103,37 @@ impl<F: TryFuture> Future for TryCancel<F> {
     }
 }
 
+/// Typed future for a cancel channel.
+#[pin_project]
+pub struct CancelChannelFuture(#[pin] oneshot::Receiver<()>);
+
+impl CancelChannelFuture {
+    /// Create a new `CancelChannelFuture`.
+    pub(crate) fn new(rx: oneshot::Receiver<()>) -> Self {
+        Self(rx)
+    }
+}
+
+impl Future for CancelChannelFuture {
+    type Output = ();
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let this = self.project();
+        let rx: Pin<&mut oneshot::Receiver<()>> = this.0;
+        match rx.poll(cx) {
+            Poll::Ready(Ok(_)) => Poll::Ready(()),
+            Poll::Ready(Err(e)) => panic!("cancel channel dropped"),
+            Poll::Pending => Poll::Pending,
+        }
+    }
+}
+
 /// A cancel handle for canceling a future.
 pub struct CancelHandle(oneshot::Sender<()>);
 
 impl CancelHandle {
     /// Create a new cancel handle.
-    pub fn new(inner: oneshot::Sender<()>) -> Self {
+    pub(crate) fn new(inner: oneshot::Sender<()>) -> Self {
         Self(inner)
     }
 
