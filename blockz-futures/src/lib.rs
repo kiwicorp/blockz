@@ -39,13 +39,21 @@ pub trait FutureKiwiExt: Future + Sized {
 /// Kiwi extensions for futures.
 pub trait TryFutureKiwiExt: TryFuture + Sized {
     /// Wrap a future with a cancel handle.
-    fn try_cancel(self) -> (TryCancel<Self>, CancelHandle) {
+    fn try_cancel(self) -> (TryCancel<Self, CancelChannelFuture>, CancelHandle) {
         TryCancel::new(self)
     }
 
     /// Wrap a future with a custom cancel channel.
-    fn try_with_cancel(self, cancel: oneshot::Receiver<()>) -> TryCancel<Self> {
-        TryCancel::with_channel(self, cancel)
+    fn try_with_cancel<C: Future<Output = ()>>(self, cancel: C) -> TryCancel<Self, C> {
+        TryCancel::with_cancel(self, cancel)
+    }
+
+    /// Wrap a future with a custom cancel channel.
+    fn try_with_cancel_channel(
+        self,
+        cancel: oneshot::Receiver<()>,
+    ) -> TryCancel<Self, CancelChannelFuture> {
+        TryCancel::with_cancel_channel(self, cancel)
     }
 }
 

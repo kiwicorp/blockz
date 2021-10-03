@@ -12,6 +12,14 @@ use tokio::sync::oneshot;
 #[error("future has been canceled")]
 pub struct Canceled;
 
+#[derive(Clone, Copy, Debug, Error)]
+pub enum MaybeCanceled<E: std::error::Error> {
+    #[error("{0}")]
+    Error(E),
+    #[error("{0}")]
+    Canceled(Canceled),
+}
+
 #[pin_project]
 pub struct Cancel<F, C> {
     #[pin]
@@ -61,45 +69,56 @@ impl<F: Future, C: Future<Output = ()>> Future for Cancel<F, C> {
 }
 
 #[pin_project]
-pub struct TryCancel<F> {
+pub struct TryCancel<F, C> {
     #[pin]
     future: F,
     #[pin]
-    cancel: oneshot::Receiver<()>,
+    cancel: C,
 }
 
-impl<F> TryCancel<F> {
+impl<F> TryCancel<F, CancelChannelFuture> {
     /// Create a new `TryCancel` future.
     pub fn new(future: F) -> (Self, CancelHandle) {
         let (tx, rx) = oneshot::channel();
-        (Self { future, cancel: rx }, CancelHandle::new(tx))
+        let cancel = CancelChannelFuture::new(rx);
+        (Self { future, cancel }, CancelHandle::new(tx))
     }
 
     /// Create a `TryCancel` future with a `cancel` channel.
-    pub fn with_channel(future: F, cancel: oneshot::Receiver<()>) -> Self {
+    pub fn with_cancel_channel(future: F, rx: oneshot::Receiver<()>) -> Self {
+        let cancel = CancelChannelFuture::new(rx);
         Self { future, cancel }
     }
 }
 
-impl<F: TryFuture> Future for TryCancel<F> {
-    type Output = Result<F::Ok, F::Error>;
+impl<F, C> TryCancel<F, C> {
+    /// Create a new `Cancel` future with a `cancel` future.
+    pub(crate) fn with_cancel(future: F, cancel: C) -> Self {
+        Self { future, cancel }
+    }
+}
+
+impl<F: TryFuture, C: Future<Output = ()>> Future for TryCancel<F, C>
+where
+    <F as TryFuture>::Error: std::error::Error,
+{
+    type Output = Result<F::Ok, MaybeCanceled<F::Error>>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.project();
         let future: Pin<&mut F> = this.future;
-        let cancel: Pin<&mut oneshot::Receiver<()>> = this.cancel;
+        let cancel: Pin<&mut C> = this.cancel;
 
-        if let Poll::Ready(out) = future.try_poll(cx) {
-            return Poll::Ready(out);
-        }
-        if let Poll::Ready(cancel) = cancel.poll(cx) {
-            match cancel {
-                Ok(()) => todo!(),
-                Err(e) => panic!("cancel dropped"),
+        if let Poll::Ready(result) = future.try_poll(cx) {
+            match result {
+                Ok(out) => Poll::Ready(Ok(out)),
+                Err(e) => Poll::Ready(Err(MaybeCanceled::Error(e))),
             }
+        } else if cancel.poll(cx).is_ready() {
+            Poll::Ready(Err(MaybeCanceled::Canceled(Canceled)))
+        } else {
+            Poll::Pending
         }
-
-        Poll::Pending
     }
 }
 
