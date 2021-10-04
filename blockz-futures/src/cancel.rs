@@ -139,11 +139,7 @@ impl Future for CancelChannelFuture {
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let this = self.project();
         let rx: Pin<&mut oneshot::Receiver<()>> = this.0;
-        match rx.poll(cx) {
-            Poll::Ready(Ok(_)) => Poll::Ready(()),
-            Poll::Ready(Err(e)) => panic!("cancel channel dropped"),
-            Poll::Pending => Poll::Pending,
-        }
+        rx.poll(cx).map(|_| ())
     }
 }
 
