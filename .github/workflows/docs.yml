@@ -1,53 +1,53 @@
-name: Docs
+# name: Docs
 
-on:
-  push:
-    branches: [ master ]
+# on:
+#   push:
+#     branches: [ master ]
 
-env:
-  CARGO_TERM_COLOR: always
+# env:
+#   CARGO_TERM_COLOR: always
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+#     steps:
+#     - name: Checkout
+#       uses: actions/checkout@v2
 
-    - name: Cache cargo directories
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+#     - name: Cache cargo directories
+#       uses: actions/cache@v2
+#       with:
+#         path: |
+#           ~/.cargo/registry
+#           ~/.cargo/git
+#         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Cache cargo target dir
-      uses: actions/cache@v2
-      with:
-        path: target
-        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+#     - name: Cache cargo target dir
+#       uses: actions/cache@v2
+#       with:
+#         path: target
+#         key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Install Rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: nightly
-        profile: minimal
-        override: true
-        components: rustfmt, rust-src
+#     - name: Install Rust toolchain
+#       uses: actions-rs/toolchain@v1
+#       with:
+#         toolchain: nightly
+#         profile: minimal
+#         override: true
+#         components: rustfmt, rust-src
 
-    - name: Test documentation
-      run: make test VERBOSE=1 PKG=blockz TESTFLAGS="--features all --doc"
+#     - name: Test documentation
+#       run: make test VERBOSE=1 PKG=blockz TESTFLAGS="--features all --doc"
 
-    - name: Build Documentation
-      run: RUSTDOCFLAGS="--cfg docsrs" make doc VERBOSE=1 DOCFLAGS="--features all --no-deps --document-private-items"
+#     - name: Build Documentation
+#       run: RUSTDOCFLAGS="--cfg docsrs" make doc VERBOSE=1 DOCFLAGS="--features all --no-deps --document-private-items"
 
-    - name: Deploy Docs
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_branch: gh-pages
-        publish_dir: ./target/doc
-        force_orphan: true
-        cname: docs.selftech.io
+#     - name: Deploy Docs
+#       uses: peaceiris/actions-gh-pages@v3
+#       with:
+#         github_token: ${{ secrets.GITHUB_TOKEN }}
+#         publish_branch: gh-pages
+#         publish_dir: ./target/doc
+#         force_orphan: true
+#         cname: docs.selftech.io
