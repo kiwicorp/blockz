@@ -34,6 +34,21 @@ pub trait FutureKiwiExt: Future + Sized {
     ) -> Cancel<Self, CancelChannelFuture> {
         Cancel::with_cancel_channel(self, cancel)
     }
+
+    /// Wrap a future with a restart handle.
+    fn restart(self) -> Self {
+        todo!()
+    }
+
+    /// Wrap a future with a restart future.
+    fn with_restart(self, _restart: ()) -> Self {
+        todo!()
+    }
+
+    /// Wrap a future with a restart channel.
+    fn with_restart_channel(self, _restart: oneshot::Receiver<()>) -> Self {
+        todo!()
+    }
 }
 
 /// Kiwi extensions for futures.
