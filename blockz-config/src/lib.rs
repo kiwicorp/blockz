@@ -63,3 +63,20 @@ impl<T: AppConfig> Error for AppConfigError<T> {
         Some(&self.inner)
     }
 }
+
+/// Macro that aids in declaratively creating the configuration object for an
+/// application.
+#[macro_export]
+macro_rules! config {
+    ($package: literal) => {
+        #[doc = "Application configuration for `"]
+        #[doc = $package]
+        #[doc = "`."]
+        #[derive(Debug, ::serde::Deserialize)]
+        pub struct Config {}
+
+        impl ::blockz_config::AppConfig for Config {
+            const PACKAGE: &'static str = $package;
+        }
+    };
+}
