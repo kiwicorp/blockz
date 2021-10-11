@@ -68,14 +68,6 @@ impl<F: Future, C: Future<Output = ()>> Future for Cancel<F, C> {
     }
 }
 
-/// Typed future that executes a graceful shutdown routine in case of an
-/// interrupt.
-#[pin_project]
-pub struct Graceful<F> {
-    #[pin]
-    future: F,
-}
-
 #[pin_project]
 pub struct TryCancel<F, C> {
     #[pin]

@@ -16,7 +16,7 @@ pub mod cancel;
 pub mod timeout;
 
 /// Kiwi extensions for futures.
-pub trait FutureKiwiExt: Future + Sized {
+pub trait FutureKiwiExt: Future + Sized + private::Sealed {
     /// Wrap a future with a cancel handle.
     fn cancel(self) -> (Cancel<Self, CancelChannelFuture>, CancelHandle) {
         Cancel::new(self)
@@ -34,25 +34,10 @@ pub trait FutureKiwiExt: Future + Sized {
     ) -> Cancel<Self, CancelChannelFuture> {
         Cancel::with_cancel_channel(self, cancel)
     }
-
-    /// Wrap a future with a restart handle.
-    fn restart(self) -> Self {
-        todo!()
-    }
-
-    /// Wrap a future with a restart future.
-    fn with_restart(self, _restart: ()) -> Self {
-        todo!()
-    }
-
-    /// Wrap a future with a restart channel.
-    fn with_restart_channel(self, _restart: oneshot::Receiver<()>) -> Self {
-        todo!()
-    }
 }
 
 /// Kiwi extensions for futures.
-pub trait TryFutureKiwiExt: TryFuture + Sized {
+pub trait TryFutureKiwiExt: TryFuture + Sized + private::Sealed {
     /// Wrap a future with a cancel handle.
     fn try_cancel(self) -> (TryCancel<Self, CancelChannelFuture>, CancelHandle) {
         TryCancel::new(self)
@@ -71,6 +56,12 @@ pub trait TryFutureKiwiExt: TryFuture + Sized {
         TryCancel::with_cancel_channel(self, cancel)
     }
 }
+
+mod private {
+    pub trait Sealed {}
+}
+
+impl<T: Future + Sized> private::Sealed for T {}
 
 impl<T: Future + Sized> FutureKiwiExt for T {}
 
