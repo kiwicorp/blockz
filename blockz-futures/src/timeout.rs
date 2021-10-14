@@ -1,5 +1,6 @@
 //! A future wrapped with a timeout.
 
+use std::error::Error;
 use std::pin::Pin;
 use std::task::Context;
 use std::task::Poll;
@@ -9,6 +10,9 @@ use std::time::Instant;
 use futures::future::Pending;
 use futures::prelude::*;
 use thiserror::Error;
+
+use crate::Maybe;
+use crate::MaybeError;
 
 #[derive(Clone, Copy, Debug, Error)]
 #[error("future timed out")]
@@ -20,6 +24,15 @@ pub enum MaybeTimedOut<E: std::error::Error> {
     Error(E),
     #[error("{0}")]
     TimedOut(TimedOut),
+}
+
+impl<E: Error> Maybe<E> for MaybeTimedOut<E> {
+    fn into_maybe_error(self) -> MaybeError<E> {
+        match self {
+            MaybeTimedOut::Error(e) => MaybeError::Error(e),
+            MaybeTimedOut::TimedOut(e) => MaybeError::TimedOut(e),
+        }
+    }
 }
 
 #[pin_project]
