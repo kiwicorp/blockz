@@ -6,6 +6,7 @@ use std::task::Poll;
 
 use futures::prelude::*;
 use thiserror::Error;
+use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 
 #[derive(Clone, Copy, Debug, Error)]
@@ -119,6 +120,41 @@ where
         } else {
             Poll::Pending
         }
+    }
+}
+
+#[pin_project(project = CancelChannelReceiverInnerProj)]
+enum CancelChannelReceiverInner {
+    Oneshot(#[pin] oneshot::Receiver<()>),
+    Mpsc(#[pin] mpsc::Receiver<()>),
+}
+
+impl Future for CancelChannelReceiverInner {
+    type Output = ();
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        match self.project() {
+            CancelChannelReceiverInnerProj::Oneshot(rx) => rx.poll(cx).map(|_| ()),
+            CancelChannelReceiverInnerProj::Mpsc(mut rx) => rx.poll_recv(cx).map(|_| ()),
+        }
+    }
+}
+
+#[pin_project(project = CancelChannelSenderInnerProj)]
+enum CancelChannelSenderInner {
+    Oneshot(#[pin] oneshot::Sender<()>),
+    Mpsc(#[pin] mpsc::Sender<()>),
+}
+
+impl Future for CancelChannelSenderInner {
+    type Output = ();
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        todo!()
+        // match self.project() {
+        //     CancelChannelSenderInnerProj::Oneshot(tx) => tx.send(()),
+        //     CancelChannelSenderInnerProj::Mpsc(mut rx) => tx.send,
+        // }
     }
 }
 
