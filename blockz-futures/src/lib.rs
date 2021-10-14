@@ -3,19 +3,24 @@
 #[macro_use]
 extern crate pin_project;
 
+use std::error::Error;
+
 use futures::Future;
 use futures::TryFuture;
+use thiserror::Error;
 use tokio::sync::oneshot;
 
 use self::cancel::Cancel;
 use self::cancel::CancelChannelFuture;
 use self::cancel::CancelHandle;
+use self::cancel::Canceled;
 use self::cancel::TryCancel;
+use self::timeout::TimedOut;
 
 pub mod cancel;
 pub mod timeout;
 
-/// Kiwi extensions for futures.
+/// Extension for futures provided by `blockz`.
 pub trait FutureKiwiExt: Future + Sized + private::Sealed {
     /// Wrap a future with a cancel handle.
     fn cancel(self) -> (Cancel<Self, CancelChannelFuture>, CancelHandle) {
@@ -57,11 +62,33 @@ pub trait TryFutureKiwiExt: TryFuture + Sized + private::Sealed {
     }
 }
 
-mod private {
-    pub trait Sealed {}
+/// Trait that defines behaviour for errors that "may be" a certain kind of
+/// error. This *SHOULD* be useful for unpacking long chains of
+/// `Result<Result<Result<Result..`.
+pub trait Maybe<E: Error>: private::Sealed {
+    fn into_maybe_error(self) -> MaybeError<E>;
 }
 
-impl<T: Future + Sized> private::Sealed for T {}
+/// Possible outcome of a future.
+#[derive(Error)]
+pub enum MaybeError<E: Error> {
+    #[error("{0}")]
+    Error(E),
+    #[error("{0}")]
+    Canceled(Canceled),
+    #[error("{0}")]
+    TimedOut(TimedOut),
+}
+
+mod private {
+    pub trait Sealed {}
+
+    impl<T: std::future::Future + Sized> Sealed for T {}
+
+    impl<E: std::error::Error> Sealed for crate::cancel::MaybeCanceled<E> {}
+
+    impl<E: std::error::Error> Sealed for crate::timeout::MaybeTimedOut<E> {}
+}
 
 impl<T: Future + Sized> FutureKiwiExt for T {}
 
