@@ -13,69 +13,72 @@ pub mod timeout;
 pub use self::error::*;
 pub use self::ext::*;
 
-    /// Wrap a future with a cancel future.
-    fn with_cancel<C: Future<Output = ()>>(self, cancel: C) -> Cancel<Self, C> {
-        Cancel::with_cancel(self, cancel)
+#[cfg(test)]
+mod test {
+    use futures::FutureExt;
+
+    use crate::BlockzFutureExt;
+
+    #[tokio::test]
+    async fn test_blockz_future_ext_cancel_future_dropped() {
+        let fut = async {
+            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+        };
+
+        let (cancel, cancel_handle) = fut.cancel();
+
+        tokio::select! {
+            _ = tokio::time::sleep(std::time::Duration::from_millis(100)) => {},
+            _ = cancel => {
+                panic!("cancelable future completed before the sleep");
+            },
+        }
+
+        // the future has not been canceled since it has been already dropped
+        // when the `sleep` finished earlier
+        assert!(!cancel_handle.cancel());
     }
 
-    /// Wrap a future with a cancel channel.
-    fn with_cancel_channel(
-        self,
-        cancel: oneshot::Receiver<()>,
-    ) -> Cancel<Self, CancelChannelFuture> {
-        Cancel::with_cancel_channel(self, cancel)
-    }
-}
+    #[tokio::test]
+    async fn test_blockz_future_ext_cancel_future_completed() {
+        let fut = async {
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        };
 
-/// Kiwi extensions for futures.
-pub trait TryFutureKiwiExt: TryFuture + Sized + private::Sealed {
-    /// Wrap a future with a cancel handle.
-    fn try_cancel(self) -> (TryCancel<Self, CancelChannelFuture>, CancelHandle) {
-        TryCancel::new(self)
-    }
+        let (cancel, cancel_handle) = fut.cancel();
 
-    /// Wrap a future with a custom cancel channel.
-    fn try_with_cancel<C: Future<Output = ()>>(self, cancel: C) -> TryCancel<Self, C> {
-        TryCancel::with_cancel(self, cancel)
+        tokio::select! {
+            _ = tokio::time::sleep(std::time::Duration::from_millis(200)) => {
+                panic!("sleep completed before cancelable future");
+            },
+            _ = cancel => {},
+        }
+
+        // the future has not been canceled since it has finished already
+        assert!(!cancel_handle.cancel());
     }
 
-    /// Wrap a future with a custom cancel channel.
-    fn try_with_cancel_channel(
-        self,
-        cancel: oneshot::Receiver<()>,
-    ) -> TryCancel<Self, CancelChannelFuture> {
-        TryCancel::with_cancel_channel(self, cancel)
+    #[tokio::test]
+    async fn test_blockz_future_ext_cancel() {
+        let fut = async {
+            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+        };
+
+        let (cancel, cancel_handle) = fut.cancel();
+        // we create a shared future so that it doesn't get dropped when the
+        // `sleep` finishes earlier
+        let shared = cancel.shared();
+
+        tokio::select! {
+            _ = tokio::time::sleep(std::time::Duration::from_millis(100)) => {},
+            _ = shared.clone() => {
+                panic!("cancelable future completed before the sleep");
+            },
+        }
+
+        assert!(cancel_handle.cancel());
+
+        let result = shared.await;
+        assert!(result.is_err());
     }
 }
-
-/// Trait that defines behaviour for errors that "may be" a certain kind of
-/// error. This *SHOULD* be useful for unpacking long chains of
-/// `Result<Result<Result<Result..`.
-pub trait Maybe<E: Error>: private::Sealed {
-    fn into_maybe_error(self) -> MaybeError<E>;
-}
-
-/// Possible outcome of a future.
-#[derive(Error)]
-pub enum MaybeError<E: Error> {
-    #[error("{0}")]
-    Error(E),
-    #[error("{0}")]
-    Canceled(Canceled),
-    #[error("{0}")]
-    TimedOut(TimedOut),
-}
-
-mod private {
-    pub trait Sealed {}
-
-    impl<T: std::future::Future + Sized> Sealed for T {}
-
-    impl<E: std::error::Error> Sealed for crate::cancel::MaybeCanceled<E> {}
-
-    impl<E: std::error::Error> Sealed for crate::timeout::MaybeTimedOut<E> {}
-}
-
-impl<T: Future + Sized> FutureKiwiExt for T {}
-
-impl<T: TryFuture + Sized> TryFutureKiwiExt for T {}
