@@ -3,29 +3,14 @@
 #[macro_use]
 extern crate pin_project;
 
-use std::error::Error;
-
-use futures::Future;
-use futures::TryFuture;
-use thiserror::Error;
-use tokio::sync::oneshot;
-
-use self::cancel::Cancel;
-use self::cancel::CancelChannelFuture;
-use self::cancel::CancelHandle;
-use self::cancel::Canceled;
-use self::cancel::TryCancel;
-use self::timeout::TimedOut;
+mod error;
+mod ext;
 
 pub mod cancel;
 pub mod timeout;
 
-/// Extension for futures provided by `blockz`.
-pub trait FutureKiwiExt: Future + Sized + private::Sealed {
-    /// Wrap a future with a cancel handle.
-    fn cancel(self) -> (Cancel<Self, CancelChannelFuture>, CancelHandle) {
-        Cancel::new(self)
-    }
+pub use self::error::*;
+pub use self::ext::*;
 
     /// Wrap a future with a cancel future.
     fn with_cancel<C: Future<Output = ()>>(self, cancel: C) -> Cancel<Self, C> {
