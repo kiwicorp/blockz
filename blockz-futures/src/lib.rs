@@ -7,6 +7,7 @@ mod error;
 mod ext;
 
 pub mod cancel;
+pub mod flatten_interrupt;
 pub mod timeout;
 
 pub use self::error::*;

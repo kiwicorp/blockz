@@ -11,7 +11,7 @@ use crate::cancel::Cancel;
 use crate::cancel::CancelChannelFuture;
 use crate::cancel::CancelHandle;
 use crate::cancel::TryCancel;
-use crate::flatten_interrupt::FlattenInterrupt;
+use crate::flatten_interrupt::TryFlattenInterrupt;
 
 /// Extensions for futures provided by blockz.
 pub trait BlockzFutureExt: Future + Sized + private::Sealed {
@@ -57,12 +57,12 @@ pub trait BlockzTryFutureExt: TryFuture + Sized + private::Sealed {
     }
 
     /// Flatten interrupts.
-    fn flatten_interrupt(self) -> FlattenInterrupt<Self>
+    fn try_flatten_interrupt(self) -> TryFlattenInterrupt<Self>
     where
         <Self as TryFuture>::Error: Error,
         <Self as TryFuture>::Error: Interrupted<<Self as TryFuture>::Error>,
     {
-        FlattenInterrupt::new(self)
+        TryFlattenInterrupt::new(self)
     }
 }
 
