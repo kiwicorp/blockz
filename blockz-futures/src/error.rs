@@ -7,13 +7,11 @@ use thiserror::Error;
 use crate::cancel::Canceled;
 use crate::timeout::TimedOut;
 
-/// Trait that defines behaviour for errors that "may be" a certain kind of
-/// error. This *SHOULD* be useful for unpacking long chains of
-/// `Result<Result<Result<Result..`.
-pub trait Interrupted<E: Error>: private::Sealed + Into<MaybeInterrupted<E>> {}
+/// Error types that may be caused by an interrupt signal.
+pub trait MayInterrupt<E: Error>: private::Sealed + Into<MaybeInterrupted<E>> {}
 
-/// Possible outcome of a future.
-#[derive(Debug, Error)]
+/// Error returned by a future that may have been interrupted.
+#[derive(Clone, Debug, Error)]
 pub enum MaybeInterrupted<E: Error> {
     #[error("{0}")]
     Error(E),
@@ -35,8 +33,9 @@ mod private {
     impl<E: std::error::Error> Sealed for crate::timeout::MaybeTimedOut<E> {}
 }
 
-impl<E, T> Interrupted<E> for T
+impl<E, T> MayInterrupt<E> for T
 where
     E: Error,
     T: self::private::Sealed + Into<MaybeInterrupted<E>>,
-{}
+{
+}

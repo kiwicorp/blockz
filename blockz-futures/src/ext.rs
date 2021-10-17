@@ -6,12 +6,12 @@ use futures::Future;
 use futures::TryFuture;
 use tokio::sync::oneshot;
 
-use crate::Interrupted;
 use crate::cancel::Cancel;
 use crate::cancel::CancelChannelFuture;
 use crate::cancel::CancelHandle;
 use crate::cancel::TryCancel;
 use crate::flatten_interrupt::TryFlattenInterrupt;
+use crate::MayInterrupt;
 
 /// Extensions for futures provided by blockz.
 pub trait BlockzFutureExt: Future + Sized + private::Sealed {
@@ -60,7 +60,7 @@ pub trait BlockzTryFutureExt: TryFuture + Sized + private::Sealed {
     fn try_flatten_interrupt(self) -> TryFlattenInterrupt<Self>
     where
         <Self as TryFuture>::Error: Error,
-        <Self as TryFuture>::Error: Interrupted<<Self as TryFuture>::Error>,
+        <Self as TryFuture>::Error: MayInterrupt<<Self as TryFuture>::Error>,
     {
         TryFlattenInterrupt::new(self)
     }

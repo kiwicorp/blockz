@@ -7,7 +7,7 @@ use std::task::Poll;
 
 use futures::prelude::*;
 
-use crate::Interrupted;
+use crate::MayInterrupt;
 use crate::MaybeInterrupted;
 
 #[pin_project]
@@ -24,8 +24,8 @@ impl<F> TryFlattenInterrupt<F> {
 
 impl<F: TryFuture> Future for TryFlattenInterrupt<F>
 where
-<F as TryFuture>::Error: Error,
-    <F as TryFuture>::Error: Interrupted<<F as TryFuture>::Error>,
+    <F as TryFuture>::Error: Error,
+    <F as TryFuture>::Error: MayInterrupt<<F as TryFuture>::Error>,
 {
     type Output = Result<F::Ok, MaybeInterrupted<<F as TryFuture>::Error>>;
 
