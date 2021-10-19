@@ -1,5 +1,6 @@
 //! A future wrapped with a timeout.
 
+use std::convert::Infallible;
 use std::error::Error;
 use std::pin::Pin;
 use std::task::Context;
@@ -11,26 +12,31 @@ use futures::future::Pending;
 use futures::prelude::*;
 use thiserror::Error;
 
-use crate::Maybe;
-use crate::MaybeError;
+use crate::MaybeInterrupted;
 
 #[derive(Clone, Copy, Debug, Error)]
 #[error("future timed out")]
 pub struct TimedOut;
 
+impl From<TimedOut> for MaybeInterrupted<Infallible> {
+    fn from(e: TimedOut) -> Self {
+        MaybeInterrupted::TimedOut(e)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Error)]
-pub enum MaybeTimedOut<E: std::error::Error> {
+pub enum MaybeTimedOut<E: Error> {
     #[error("{0}")]
     Error(E),
     #[error("{0}")]
     TimedOut(TimedOut),
 }
 
-impl<E: Error> Maybe<E> for MaybeTimedOut<E> {
-    fn into_maybe_error(self) -> MaybeError<E> {
-        match self {
-            MaybeTimedOut::Error(e) => MaybeError::Error(e),
-            MaybeTimedOut::TimedOut(e) => MaybeError::TimedOut(e),
+impl<E: Error> From<MaybeTimedOut<E>> for MaybeInterrupted<E> {
+    fn from(e: MaybeTimedOut<E>) -> Self {
+        match e {
+            MaybeTimedOut::Error(e) => MaybeInterrupted::Error(e),
+            MaybeTimedOut::TimedOut(e) => MaybeInterrupted::TimedOut(e),
         }
     }
 }

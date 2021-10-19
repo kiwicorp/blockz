@@ -1,5 +1,7 @@
 //! A future wrapped with a cancel signal.
 
+use std::convert::Infallible;
+use std::error::Error;
 use std::pin::Pin;
 use std::task::Context;
 use std::task::Poll;
@@ -8,16 +10,33 @@ use futures::prelude::*;
 use thiserror::Error;
 use tokio::sync::oneshot;
 
+use crate::MaybeInterrupted;
+
 #[derive(Clone, Copy, Debug, Error)]
 #[error("future has been canceled")]
 pub struct Canceled;
 
+impl From<Canceled> for MaybeInterrupted<Infallible> {
+    fn from(e: Canceled) -> Self {
+        MaybeInterrupted::Canceled(e)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Error)]
-pub enum MaybeCanceled<E: std::error::Error> {
+pub enum MaybeCanceled<E: Error> {
     #[error("{0}")]
     Error(E),
     #[error("{0}")]
     Canceled(Canceled),
+}
+
+impl<E: Error> From<MaybeCanceled<E>> for MaybeInterrupted<E> {
+    fn from(e: MaybeCanceled<E>) -> Self {
+        match e {
+            MaybeCanceled::Error(e) => MaybeInterrupted::Error(e),
+            MaybeCanceled::Canceled(e) => MaybeInterrupted::Canceled(e),
+        }
+    }
 }
 
 #[pin_project]
