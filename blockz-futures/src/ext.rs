@@ -1,17 +1,16 @@
 //! Extensions for futures provided by blockz.
 
-use std::error::Error;
+use std::time::Duration;
+use std::time::Instant;
 
 use futures::Future;
-use futures::TryFuture;
 use tokio::sync::oneshot;
 
 use crate::cancel::Cancel;
 use crate::cancel::CancelChannelFuture;
 use crate::cancel::CancelHandle;
-use crate::cancel::TryCancel;
-use crate::flatten_interrupt::TryFlattenInterrupt;
-use crate::MayInterrupt;
+use crate::timeout::Deadline;
+use crate::timeout::Timeout;
 
 /// Extensions for futures provided by blockz.
 pub trait BlockzFutureExt: Future + Sized + private::Sealed {
@@ -32,37 +31,13 @@ pub trait BlockzFutureExt: Future + Sized + private::Sealed {
     ) -> Cancel<Self, CancelChannelFuture> {
         Cancel::with_cancel_channel(self, cancel)
     }
-}
 
-/// Extensions for futures provided by blockz.
-///
-/// These extensions are relevant for futures that return a `Result`.
-pub trait BlockzTryFutureExt: TryFuture + Sized + private::Sealed {
-    /// Wrap a future with a cancel handle.
-    fn try_cancel(self) -> (TryCancel<Self, CancelChannelFuture>, CancelHandle) {
-        TryCancel::new(self)
+    fn deadline(self, deadline: Instant) -> Deadline<Self> {
+        Deadline::new(self, deadline)
     }
 
-    /// Wrap a future with a custom cancel channel.
-    fn try_with_cancel<C: Future<Output = ()>>(self, cancel: C) -> TryCancel<Self, C> {
-        TryCancel::with_cancel(self, cancel)
-    }
-
-    /// Wrap a future with a custom cancel channel.
-    fn try_with_cancel_channel(
-        self,
-        cancel: oneshot::Receiver<()>,
-    ) -> TryCancel<Self, CancelChannelFuture> {
-        TryCancel::with_cancel_channel(self, cancel)
-    }
-
-    /// Flatten interrupts.
-    fn try_flatten_interrupt(self) -> TryFlattenInterrupt<Self>
-    where
-        <Self as TryFuture>::Error: Error,
-        <Self as TryFuture>::Error: MayInterrupt<<Self as TryFuture>::Error>,
-    {
-        TryFlattenInterrupt::new(self)
+    fn timeout(self, timeout: Duration) -> Timeout<Self> {
+        Timeout::new(self, timeout)
     }
 }
 
@@ -73,5 +48,3 @@ mod private {
 }
 
 impl<T: Future + Sized> BlockzFutureExt for T {}
-
-impl<T: TryFuture + Sized> BlockzTryFutureExt for T {}

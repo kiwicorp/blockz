@@ -1,7 +1,5 @@
 //! A future wrapped with a cancel signal.
 
-use std::convert::Infallible;
-use std::error::Error;
 use std::pin::Pin;
 use std::task::Context;
 use std::task::Poll;
@@ -10,34 +8,9 @@ use futures::prelude::*;
 use thiserror::Error;
 use tokio::sync::oneshot;
 
-use crate::MaybeInterrupted;
-
 #[derive(Clone, Copy, Debug, Error)]
 #[error("future has been canceled")]
 pub struct Canceled;
-
-impl From<Canceled> for MaybeInterrupted<Infallible> {
-    fn from(e: Canceled) -> Self {
-        MaybeInterrupted::Canceled(e)
-    }
-}
-
-#[derive(Clone, Copy, Debug, Error)]
-pub enum MaybeCanceled<E: Error> {
-    #[error("{0}")]
-    Error(E),
-    #[error("{0}")]
-    Canceled(Canceled),
-}
-
-impl<E: Error> From<MaybeCanceled<E>> for MaybeInterrupted<E> {
-    fn from(e: MaybeCanceled<E>) -> Self {
-        match e {
-            MaybeCanceled::Error(e) => MaybeInterrupted::Error(e),
-            MaybeCanceled::Canceled(e) => MaybeInterrupted::Canceled(e),
-        }
-    }
-}
 
 #[pin_project]
 pub struct Cancel<F, C> {
@@ -87,60 +60,6 @@ impl<F: Future, C: Future<Output = ()>> Future for Cancel<F, C> {
     }
 }
 
-#[pin_project]
-pub struct TryCancel<F, C> {
-    #[pin]
-    future: F,
-    #[pin]
-    cancel: C,
-}
-
-impl<F> TryCancel<F, CancelChannelFuture> {
-    /// Create a new `TryCancel` future.
-    pub fn new(future: F) -> (Self, CancelHandle) {
-        let (tx, rx) = oneshot::channel();
-        let cancel = CancelChannelFuture::new(rx);
-        (Self { future, cancel }, CancelHandle::new(tx))
-    }
-
-    /// Create a `TryCancel` future with a `cancel` channel.
-    pub fn with_cancel_channel(future: F, rx: oneshot::Receiver<()>) -> Self {
-        let cancel = CancelChannelFuture::new(rx);
-        Self { future, cancel }
-    }
-}
-
-impl<F, C> TryCancel<F, C> {
-    /// Create a new `Cancel` future with a `cancel` future.
-    pub(crate) fn with_cancel(future: F, cancel: C) -> Self {
-        Self { future, cancel }
-    }
-}
-
-impl<F: TryFuture, C: Future<Output = ()>> Future for TryCancel<F, C>
-where
-    <F as TryFuture>::Error: std::error::Error,
-{
-    type Output = Result<F::Ok, MaybeCanceled<F::Error>>;
-
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let this = self.project();
-        let future: Pin<&mut F> = this.future;
-        let cancel: Pin<&mut C> = this.cancel;
-
-        if let Poll::Ready(result) = future.try_poll(cx) {
-            match result {
-                Ok(out) => Poll::Ready(Ok(out)),
-                Err(e) => Poll::Ready(Err(MaybeCanceled::Error(e))),
-            }
-        } else if cancel.poll(cx).is_ready() {
-            Poll::Ready(Err(MaybeCanceled::Canceled(Canceled)))
-        } else {
-            Poll::Pending
-        }
-    }
-}
-
 /// Typed future for a cancel channel.
 #[pin_project]
 pub struct CancelChannelFuture(#[pin] oneshot::Receiver<()>);
@@ -173,8 +92,10 @@ impl CancelHandle {
 
     /// Cancel the future.
     ///
-    /// Returns whether the future has been canceled or not. A future will not
-    /// be canceled if it has finished already.
+    /// Returns whether the future has been canceled or not.
+    ///
+    /// This function returns false if the future has been dropped or if it has
+    /// finished prior to trying to cancel it.
     pub fn cancel(self) -> bool {
         self.0.send(()).is_ok()
     }

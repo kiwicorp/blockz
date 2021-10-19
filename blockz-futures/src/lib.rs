@@ -3,14 +3,11 @@
 #[macro_use]
 extern crate pin_project;
 
-mod error;
 mod ext;
 
 pub mod cancel;
-pub mod flatten_interrupt;
 pub mod timeout;
 
-pub use self::error::*;
 pub use self::ext::*;
 
 #[cfg(test)]
