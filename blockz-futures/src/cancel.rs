@@ -1,4 +1,4 @@
-//! A future wrapped with a cancel signal.
+//! Futures that can be canceled.
 
 use std::pin::Pin;
 use std::task::Context;
@@ -8,10 +8,12 @@ use futures::prelude::*;
 use thiserror::Error;
 use tokio::sync::oneshot;
 
+/// Error type for futures that can be canceled.
 #[derive(Clone, Copy, Debug, Error)]
 #[error("future has been canceled")]
 pub struct Canceled(());
 
+/// A future that can be canceled.
 #[pin_project]
 pub struct Cancel<F, C> {
     #[pin]
@@ -60,7 +62,8 @@ impl<F: Future, C: Future<Output = ()>> Future for Cancel<F, C> {
     }
 }
 
-/// Typed future for a cancel channel.
+/// Future that produces a value when the underlying channel produces a value
+/// or is closed.
 #[pin_project]
 pub struct CancelChannelFuture(#[pin] oneshot::Receiver<()>);
 
@@ -81,7 +84,9 @@ impl Future for CancelChannelFuture {
     }
 }
 
-/// A cancel handle for canceling a future.
+/// A handle that can be used for canceling a future.
+///
+/// This handle will send a cancellation signal when dropped.
 pub struct CancelHandle(oneshot::Sender<()>);
 
 impl CancelHandle {
