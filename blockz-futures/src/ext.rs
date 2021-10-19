@@ -1,6 +1,8 @@
 //! Extensions for futures provided by blockz.
 
 use std::error::Error;
+use std::time::Duration;
+use std::time::Instant;
 
 use futures::Future;
 use futures::TryFuture;
@@ -11,6 +13,10 @@ use crate::cancel::CancelChannelFuture;
 use crate::cancel::CancelHandle;
 use crate::cancel::TryCancel;
 use crate::flatten_interrupt::TryFlattenInterrupt;
+use crate::timeout::Deadline;
+use crate::timeout::Timeout;
+use crate::timeout::TryDeadline;
+use crate::timeout::TryTimeout;
 use crate::MayInterrupt;
 
 /// Extensions for futures provided by blockz.
@@ -31,6 +37,14 @@ pub trait BlockzFutureExt: Future + Sized + private::Sealed {
         cancel: oneshot::Receiver<()>,
     ) -> Cancel<Self, CancelChannelFuture> {
         Cancel::with_cancel_channel(self, cancel)
+    }
+
+    fn deadline(self, deadline: Instant) -> Deadline<Self> {
+        Deadline::new(self, deadline)
+    }
+
+    fn timeout(self, timeout: Duration) -> Timeout<Self> {
+        Timeout::new(self, timeout)
     }
 }
 
@@ -57,12 +71,20 @@ pub trait BlockzTryFutureExt: TryFuture + Sized + private::Sealed {
     }
 
     /// Flatten interrupts.
-    fn try_flatten_interrupt(self) -> TryFlattenInterrupt<Self>
+    fn try_flatten_interrupt<E: Error>(self) -> TryFlattenInterrupt<Self>
     where
         <Self as TryFuture>::Error: Error,
-        <Self as TryFuture>::Error: MayInterrupt<<Self as TryFuture>::Error>,
+        <Self as TryFuture>::Error: MayInterrupt<E>,
     {
         TryFlattenInterrupt::new(self)
+    }
+
+    fn try_deadline(self, deadline: Instant) -> TryDeadline<Self> {
+        TryDeadline::new(self, deadline)
+    }
+
+    fn try_timeout(self, timeout: Duration) -> TryTimeout<Self> {
+        TryTimeout::new(self, timeout)
     }
 }
 

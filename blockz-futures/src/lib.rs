@@ -15,9 +15,12 @@ pub use self::ext::*;
 
 #[cfg(test)]
 mod test {
+    use std::time::Duration;
+
     use futures::FutureExt;
 
     use crate::BlockzFutureExt;
+    use crate::BlockzTryFutureExt;
 
     #[tokio::test]
     async fn test_blockz_future_ext_cancel_future_dropped() {
@@ -80,5 +83,14 @@ mod test {
 
         let result = shared.await;
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_blockz_future_flatten_interrupt() {
+        let fut = async { Ok::<_, Box<dyn std::error::Error>>(42) };
+
+        let (fut, cancel) = fut.timeout(Duration::from_millis(100)).cancel();
+        let fut = fut.try_flatten_interrupt();
+        let out = fut.await;
     }
 }

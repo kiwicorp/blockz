@@ -1,5 +1,6 @@
 //! Future that flattens interrupt signals.
 
+// use std::convert::Infallible;
 use std::error::Error;
 use std::pin::Pin;
 use std::task::Context;
@@ -22,24 +23,41 @@ impl<F> TryFlattenInterrupt<F> {
     }
 }
 
-impl<F: TryFuture> Future for TryFlattenInterrupt<F>
-where
-    <F as TryFuture>::Error: Error,
-    <F as TryFuture>::Error: MayInterrupt<<F as TryFuture>::Error>,
-{
-    type Output = Result<F::Ok, MaybeInterrupted<<F as TryFuture>::Error>>;
+// impl<F, O, I> Future for TryFlattenInterrupt<F>
+// where
+//     F: Future<Output = Result<O, I>>,
+//     I: MayInterrupt<Infallible>,
+// {
+//     type Output = Result<O, MaybeInterrupted<Infallible>>;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let this = self.project();
-        let future: Pin<&mut F> = this.future;
+//     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+//         let this = self.project();
+//         let future = this.future;
+//         match future.poll(cx) {
+//             Poll::Ready(Ok(out)) => Poll::Ready(Ok(out)),
+//             Poll::Ready(Err(interrupt)) => Poll::Ready(Err(interrupt.into())),
+//             Poll::Pending => Poll::Pending,
+//         }
+//     }
+// }
 
-        if let Poll::Ready(result) = future.try_poll(cx) {
-            match result {
-                Ok(out) => Poll::Ready(Ok(out)),
-                Err(e) => Poll::Ready(Err(e.into())),
-            }
-        } else {
-            Poll::Pending
-        }
-    }
-}
+// impl<F, O, E, I, Ie> Future for TryFlattenInterrupt<F>
+// where
+//     F: Future<Output = Result<Result<O, E>, I>>,
+//     E: Error,
+//     I: MayInterrupt<Ie>,
+//     Ie: Error,
+// {
+//     type Output = Result<O, MaybeInterrupted<Ie>>;
+
+//     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+//         let this = self.project();
+//         let future = this.future;
+//         match future.poll(cx) {
+//             Poll::Ready(Ok(Ok(out))) => Poll::Ready(Ok(out)),
+//             Poll::Ready(Ok(Err(error))) => Poll::Ready(Err(MaybeInterrupted::Error(error))),
+//             Poll::Ready(Err(interrupt)) => Poll::Ready(Err(interrupt.into())),
+//             Poll::Pending => Poll::Pending,
+//         }
+//     }
+// }

@@ -119,7 +119,7 @@ impl<F, C> TryCancel<F, C> {
 
 impl<F: TryFuture, C: Future<Output = ()>> Future for TryCancel<F, C>
 where
-    <F as TryFuture>::Error: std::error::Error,
+    <F as TryFuture>::Error: Error,
 {
     type Output = Result<F::Ok, MaybeCanceled<F::Error>>;
 
@@ -173,8 +173,10 @@ impl CancelHandle {
 
     /// Cancel the future.
     ///
-    /// Returns whether the future has been canceled or not. A future will not
-    /// be canceled if it has finished already.
+    /// Returns whether the future has been canceled or not.
+    ///
+    /// This function returns false if the future has been dropped or if it has
+    /// finished prior to trying to cancel it.
     pub fn cancel(self) -> bool {
         self.0.send(()).is_ok()
     }
