@@ -1,5 +1,4 @@
-//! A future wrapped with a timeout.
-
+//! Futures constrained by time.
 use std::pin::Pin;
 use std::task::Context;
 use std::task::Poll;
@@ -9,10 +8,12 @@ use std::time::Instant;
 use futures::prelude::*;
 use thiserror::Error;
 
+/// Error type for futures that ran out of time.
 #[derive(Clone, Copy, Debug, Error)]
 #[error("future timed out")]
 pub struct TimedOut(());
 
+/// A future that must complete in a certain time interval.
 #[pin_project]
 pub struct Timeout<F> {
     #[pin]
@@ -46,6 +47,7 @@ impl<F: Future> Future for Timeout<F> {
     }
 }
 
+/// A future that must complete before a moment in time.
 #[pin_project]
 pub struct Deadline<F> {
     #[pin]
