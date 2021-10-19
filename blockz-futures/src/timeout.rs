@@ -11,7 +11,7 @@ use thiserror::Error;
 
 #[derive(Clone, Copy, Debug, Error)]
 #[error("future timed out")]
-pub struct TimedOut;
+pub struct TimedOut(());
 
 #[pin_project]
 pub struct Timeout<F> {
@@ -38,7 +38,7 @@ impl<F: Future> Future for Timeout<F> {
         if let Poll::Ready(result) = future.poll(cx) {
             match result {
                 Ok(out) => Poll::Ready(Ok(out)),
-                Err(_) => Poll::Ready(Err(TimedOut)),
+                Err(_) => Poll::Ready(Err(TimedOut(()))),
             }
         } else {
             Poll::Pending
@@ -71,7 +71,7 @@ impl<F: Future> Future for Deadline<F> {
         if let Poll::Ready(result) = future.poll(cx) {
             match result {
                 Ok(out) => Poll::Ready(Ok(out)),
-                Err(_) => Poll::Ready(Err(TimedOut)),
+                Err(_) => Poll::Ready(Err(TimedOut(()))),
             }
         } else {
             Poll::Pending

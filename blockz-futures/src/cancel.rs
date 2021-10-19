@@ -10,7 +10,7 @@ use tokio::sync::oneshot;
 
 #[derive(Clone, Copy, Debug, Error)]
 #[error("future has been canceled")]
-pub struct Canceled;
+pub struct Canceled(());
 
 #[pin_project]
 pub struct Cancel<F, C> {
@@ -53,7 +53,7 @@ impl<F: Future, C: Future<Output = ()>> Future for Cancel<F, C> {
         if let Poll::Ready(out) = future.poll(cx) {
             Poll::Ready(Ok(out))
         } else if cancel.poll(cx).is_ready() {
-            Poll::Ready(Err(Canceled))
+            Poll::Ready(Err(Canceled(())))
         } else {
             Poll::Pending
         }
