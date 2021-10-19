@@ -1,4 +1,4 @@
-//! Extensions for futures provided by blockz.
+//! Extensions for futures.
 
 use std::time::Duration;
 use std::time::Instant;
@@ -12,19 +12,20 @@ use crate::cancel::CancelHandle;
 use crate::timeout::Deadline;
 use crate::timeout::Timeout;
 
-/// Extensions for futures provided by blockz.
+/// Extensions for futures.
 pub trait BlockzFutureExt: Future + Sized + private::Sealed {
-    /// Wrap a future with a cancel handle.
-    fn cancel(self) -> (Cancel<Self, CancelChannelFuture>, CancelHandle) {
+    /// Get a cancel handle for this future.
+    fn with_cancel_handle(self) -> (Cancel<Self, CancelChannelFuture>, CancelHandle) {
         Cancel::new(self)
     }
 
-    /// Wrap a future with a cancel future.
-    fn with_cancel<C: Future<Output = ()>>(self, cancel: C) -> Cancel<Self, C> {
+    /// Force this future to complete before the other future.
+    fn with_cancel_future<C: Future<Output = ()>>(self, cancel: C) -> Cancel<Self, C> {
         Cancel::with_cancel(self, cancel)
     }
 
-    /// Wrap a future with a cancel channel.
+    /// Force this future to complete before the channel produces a value or
+    /// is closed.
     fn with_cancel_channel(
         self,
         cancel: oneshot::Receiver<()>,
@@ -32,10 +33,12 @@ pub trait BlockzFutureExt: Future + Sized + private::Sealed {
         Cancel::with_cancel_channel(self, cancel)
     }
 
+    /// Force this future to complete before a point in time.
     fn deadline(self, deadline: Instant) -> Deadline<Self> {
         Deadline::new(self, deadline)
     }
 
+    /// Force this future to complete in a time interval.
     fn timeout(self, timeout: Duration) -> Timeout<Self> {
         Timeout::new(self, timeout)
     }
