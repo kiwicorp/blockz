@@ -1,9 +1,9 @@
 //! Extensions for futures.
 
+use std::future::Future;
 use std::time::Duration;
 use std::time::Instant;
 
-use futures::Future;
 use tokio::sync::oneshot;
 
 use crate::cancel::Cancel;

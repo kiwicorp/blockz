@@ -1,10 +1,10 @@
 //! Futures that can be canceled.
 
+use std::future::Future;
 use std::pin::Pin;
 use std::task::Context;
 use std::task::Poll;
 
-use futures::prelude::*;
 use thiserror::Error;
 use tokio::sync::oneshot;
 

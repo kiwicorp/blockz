@@ -1,11 +1,12 @@
 //! Futures constrained by time.
+
+use std::future::Future;
 use std::pin::Pin;
 use std::task::Context;
 use std::task::Poll;
 use std::time::Duration;
 use std::time::Instant;
 
-use futures::prelude::*;
 use thiserror::Error;
 
 /// Error type for futures that ran out of time.

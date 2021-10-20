@@ -1,4 +1,4 @@
-//! Utilities for working with futures.
+//! Utilities for working with futures for the tokio stack.
 
 #[macro_use]
 extern crate pin_project;
