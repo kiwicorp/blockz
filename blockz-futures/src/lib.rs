@@ -12,6 +12,8 @@ pub use self::ext::*;
 
 #[cfg(test)]
 mod test {
+    use std::time::Duration;
+
     use futures::FutureExt;
 
     use crate::BlockzFutureExt;
@@ -215,5 +217,79 @@ mod test {
             .deadline(std::time::Instant::now() + std::time::Duration::from_millis(2))
             .await
             .is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_interrupt_chain_timed_out() {
+        let fut = async {
+            tokio::time::sleep(std::time::Duration::from_millis(3)).await;
+        };
+
+        let (fut, cancel) = fut.timeout(Duration::from_millis(1)).with_cancel_handle();
+        let fut = fut.shared();
+
+        tokio::select! {
+            _ = tokio::time::sleep(std::time::Duration::from_millis(2)) => {},
+            _ = fut.clone() => {},
+        };
+
+        assert!(!cancel.cancel());
+        assert!(matches!(fut.await, Ok(Err(_))));
+    }
+
+    #[tokio::test]
+    async fn test_interrupt_chain_canceled() {
+        let fut = async {
+            tokio::time::sleep(std::time::Duration::from_millis(3)).await;
+        };
+
+        let (fut, cancel) = fut.timeout(Duration::from_millis(2)).with_cancel_handle();
+        let fut = fut.shared();
+
+        tokio::select! {
+            _ = tokio::time::sleep(std::time::Duration::from_millis(1)) => {},
+            _ = fut.clone() => {},
+        };
+
+        assert!(cancel.cancel());
+        assert!(matches!(fut.await, Err(_)));
+    }
+
+    #[tokio::test]
+    async fn test_interrupt_chain_ok() {
+        let fut = async {
+            tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+            Ok::<_, &str>(())
+        };
+
+        let (fut, cancel) = fut.timeout(Duration::from_millis(2)).with_cancel_handle();
+        let fut = fut.shared();
+
+        tokio::select! {
+            _ = tokio::time::sleep(std::time::Duration::from_millis(2)) => {},
+            _ = fut.clone() => {},
+        };
+
+        assert!(!cancel.cancel());
+        assert!(matches!(fut.await, Ok(Ok(Ok(())))));
+    }
+
+    #[tokio::test]
+    async fn test_interrupt_chain_err() {
+        let fut = async {
+            tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+            Err::<(), _>("error")
+        };
+
+        let (fut, cancel) = fut.timeout(Duration::from_millis(2)).with_cancel_handle();
+        let fut = fut.shared();
+
+        tokio::select! {
+            _ = tokio::time::sleep(std::time::Duration::from_millis(2)) => {},
+            _ = fut.clone() => {},
+        };
+
+        assert!(!cancel.cancel());
+        assert!(matches!(fut.await, Ok(Ok(Err("error")))));
     }
 }
