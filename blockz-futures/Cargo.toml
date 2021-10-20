@@ -1,9 +1,14 @@
 [package]
-name = "blockz-futures"
-version = "0.1.0"
-edition = "2018"
+name        = "blockz-futures"
+version     = "0.1.0"
+authors     = ["cezarmathe <me@cezarmathe.com>"]
+edition     = "2018"
+description = "Utilities for working with futures for the tokio stack."
+readme      = "README.md"
+license     = "MIT"
+homepage    = "https://github.com/kiwicorp/blockz"
+repository  = "https://github.com/kiwicorp/blockz"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dev-dependencies]
 futures = "0.3"
@@ -11,6 +16,7 @@ futures = "0.3"
 [dev-dependencies.tokio]
 version  = "1.0"
 features = ["macros", "rt-multi-thread"]
+
 
 [dependencies]
 pin-project = "1.0"
