@@ -6,6 +6,7 @@ extern crate pin_project;
 mod ext;
 
 pub mod cancel;
+pub mod flatten_interrupts;
 pub mod timeout;
 
 pub use self::ext::*;

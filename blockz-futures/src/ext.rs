@@ -9,6 +9,7 @@ use tokio::sync::oneshot;
 use crate::cancel::Cancel;
 use crate::cancel::CancelChannelFuture;
 use crate::cancel::CancelHandle;
+use crate::flatten_interrupts::FlattenInterrupts;
 use crate::timeout::Deadline;
 use crate::timeout::Timeout;
 
@@ -41,6 +42,11 @@ pub trait BlockzFutureExt: Future + Sized + private::Sealed {
     /// Force this future to complete in a time interval.
     fn timeout(self, timeout: Duration) -> Timeout<Self> {
         Timeout::new(self, timeout)
+    }
+
+    /// Flatten multiple interrupts into a single error.
+    fn flatten_interrupts(self) -> FlattenInterrupts<Self> {
+        todo!()
     }
 }
 
