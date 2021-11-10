@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "blockz-config",
+    "blockz-databases",
     "blockz-futures",
 ]
